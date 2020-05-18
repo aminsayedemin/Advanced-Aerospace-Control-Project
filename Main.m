@@ -4,6 +4,7 @@ clc
 %% Ciao sono Davide
 plot([0,1], [10,12]);
 plot(3, 4)
+aueeeee
 g = 9.81;
 
 Y_v = -0.264;                   % stability derivatives
