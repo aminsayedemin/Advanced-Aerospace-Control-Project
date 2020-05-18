@@ -1,6 +1,8 @@
 clear all
 close all
 clc
+%% Ciao sono Davide
+plot([0,1], [10,12]);
 
 g = 9.81;
 
