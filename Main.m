@@ -34,8 +34,8 @@ D = [0;
 
 %% LQR Problem
 % Performance: \dot{p}
-Cz = A(1,:);
-Dzu = B(1);
+Cz = A(2,:);
+Dzu = B(2);
 
 Wzz = 1;
 Wuu = 1; % Rho
