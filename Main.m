@@ -12,6 +12,7 @@ L_v = ureal('lv', -7.349,'Perc', 4.927);
 L_p = 0;
 Y_d = ureal('yd', 9.568,'Perc', 4.647);
 L_d = ureal('ld', 1079.339,'Perc', 2.762);
+
 g = 9.81;
 
 A = [Y_v    Y_p     g;
@@ -23,6 +24,8 @@ Anom = A.NominalValue; % The matrix with its nominal value
 B = [Y_d;
     L_d;
     0];
+Bnom = B.NominalValue; % The vector with its nominal value
+
 
 C = [0      1       0;
     0       0       1];
@@ -31,10 +34,28 @@ D = [0;
     0];
 
 Ts = 0.004; % Sampling interval
-sC = ss(A, B, C, D, Ts); % Discrete time
-G = tf(sC);
-% Y = usample(G,10);
-% bode(G(1));
+ssnom = ss(Anom, Bnom, C, D); % Nominal Plant
+ss_dis = c2d(ssnom, Ts, 'foh'); % NP in discrete time
+P0 = tf(ss_dis);
+% figure;
+% bode(P0(1)), grid on
+% figure;
+% bode(P0(2)), grid on
+
+% Controller: R_p
+b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
+Ap = [1 0; 0 0];
+Bp = [b -b; 0 0.5];
+Cp = [c1 c2];
+Dp = [d1 d2];
+
+ssnom = ss(Ap, Bp, Cp, Dp); % Nominal Plant
+ss_dis = c2d(ssnom, Ts, 'foh'); % NP in discrete time
+P0 = tf(ss_dis);
+
+% Controller: R_phi
+d3 = 1;
+D_phi = d3;
 
 %% 1
 
