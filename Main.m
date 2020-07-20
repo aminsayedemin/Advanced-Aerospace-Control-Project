@@ -34,15 +34,20 @@ D = [0;
     0];
 
 Ts = 0.004; % Sampling interval
+% Nominal plant
 ld = ss(Anom, Bnom, C, D); % Nominal Plant
-ld_dis = c2d(ld, Ts, 'foh'); % NP in discrete time
-P_ld = tf(ld_dis);
-% figure;
-% bode(P0(1)), grid on
-% figure;
-% bode(P0(2)), grid on
+P_ld = tf(ld); % Nominal Plant Continuous time t.f.
+G = [P_ld(1); P_ld(2)];
+pole(P_ld)
 
-% Controller: R_p
+% Uncertainty Plant
+ld_un = ss(A, B, C, D);
+
+% Uncertain Plant
+% ld_un_dis = c2d(ld_un, Ts, 'foh'); % NP in discrete time
+% P_ld = tf(ld_un_dis);
+
+%% Controller: R_p
 b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
 Ap = [1 0; 0 0];
 Bp = [b -b; 0 0.5];
@@ -53,11 +58,9 @@ rp = ss(Ap, Bp, Cp, Dp); % Nominal Plant
 rp_dis = c2d(rp, Ts, 'foh'); % NP in discrete time
 P_p = tf(rp_dis);
 
-% Controller: R_phi
+%% Controller: R_phi
 d3 = tunableGain('d3', 1, 1);
 D_phi = d3;
-
-%% 1
 
 % %% LQR Problem
 % % Performance: \dot{p}
