@@ -24,8 +24,7 @@ Anom = A.NominalValue; % The matrix with its nominal value
 B = [Y_d;
     L_d;
     0];
-Bnom = B.NominalValue; % The vector with its nominal value
-
+Bnom = B.NominalValue; % The vector B with its nominal value
 
 C = [0      1       0;
     0       0       1];
@@ -33,13 +32,12 @@ C = [0      1       0;
 D = [0;
     0];
 
-Ts = 0.004; % Sampling interval
 % Nominal plant
 ld = ss(Anom, Bnom, C, D); % Nominal Plant
 P_ld = tf(ld); % Nominal Plant continuous time t.f.
 G0 = [P_ld(1); P_ld(2)];
 gain = [0; 2.976834512415036]; % 0 and 214.6/72.09
-pole(P_ld)
+% pole(P_ld)
 
 % Uncertain Plant
 ld_un = ss(A, B, C, D);
@@ -47,6 +45,8 @@ P_ld_un = tf(ld); % Uncertain Plant continuous time t.f.
 G1 = [P_ld_un(1); P_ld_un(2)];
 
 %% Controller: R_p
+Ts = 0.004; % Sampling interval
+
 b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
 Ap = [1 0; 0 0];
 Bp = [b -b; 0 0.5];
@@ -59,7 +59,8 @@ P_p = tf(rp_dis);
 
 %% Controller: R_phi
 d3 = tunableGain('d3', 1, 1);
-D_phi = d3;
+% d3 = 1;
+D_phi = ss(d3);
 
 % %% LQR Problem
 % % Performance: \dot{p}
