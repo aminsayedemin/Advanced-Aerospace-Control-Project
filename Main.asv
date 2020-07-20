@@ -34,18 +34,28 @@ D = [0;
     0];
 
 Ts = 0.004; % Sampling interval
-ssnom = ss(Anom, Bnom, C, D); % Nominal Plant
-ss_dis = c2d(ssnom, Ts, 'foh'); % NP in discrete time
-P0 = tf(ss_dis);
-figure;
-bode(P0(1)), grid on
-figure;
-bode(P0(2)), grid on
+ld = ss(Anom, Bnom, C, D); % Nominal Plant
+ld_dis = c2d(ld, Ts, 'foh'); % NP in discrete time
+P_lat = tf(ss_dis);
+% figure;
+% bode(P0(1)), grid on
+% figure;
+% bode(P0(2)), grid on
 
 % Controller: R_p
-Ap = [1 0; 0 1];
-Bp = 
+b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
+Ap = [1 0; 0 0];
+Bp = [b -b; 0 0.5];
+Cp = [c1 c2];
+Dp = [d1 d2];
 
+ssnom = ss(Ap, Bp, Cp, Dp); % Nominal Plant
+ss_dis = c2d(ssnom, Ts, 'foh'); % NP in discrete time
+P_p = tf();
+
+% Controller: R_phi
+d3 = 1;
+D_phi = d3;
 
 %% 1
 
