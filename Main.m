@@ -34,9 +34,9 @@ D = [0;
     0];
 
 Ts = 0.004; % Sampling interval
-ssnom = ss(Anom, Bnom, C, D); % Nominal Plant
-ss_dis = c2d(ssnom, Ts, 'foh'); % NP in discrete time
-P0 = tf(ss_dis);
+ld = ss(Anom, Bnom, C, D); % Nominal Plant
+ld_dis = c2d(ld, Ts, 'foh'); % NP in discrete time
+P_ld = tf(ld_dis);
 % figure;
 % bode(P0(1)), grid on
 % figure;
@@ -49,12 +49,12 @@ Bp = [b -b; 0 0.5];
 Cp = [c1 c2];
 Dp = [d1 d2];
 
-ssnom = ss(Ap, Bp, Cp, Dp); % Nominal Plant
-ss_dis = c2d(ssnom, Ts, 'foh'); % NP in discrete time
-P0 = tf(ss_dis);
+rp = ss(Ap, Bp, Cp, Dp); % Nominal Plant
+rp_dis = c2d(rp, Ts, 'foh'); % NP in discrete time
+P_p = tf(rp_dis);
 
 % Controller: R_phi
-d3 = 1;
+d3 = tunableGain('d3', 1, 1);
 D_phi = d3;
 
 %% 1
