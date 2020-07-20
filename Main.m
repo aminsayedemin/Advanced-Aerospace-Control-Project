@@ -32,22 +32,57 @@ C = [0      1       0;
 D = [0;
     0];
 
-% Nominal plant
+%% Nominal plant
 ld = ss(Anom, Bnom, C, D); % Nominal Plant
 P_ld = tf(ld); % Nominal Plant continuous time t.f.
 G0 = [P_ld(1); P_ld(2)];
 gain = [0; 214.6/72.09]; % 0 and 214.6/72.09
-% pole(P_ld)
-sigma(G0)
+% sigma(G0)
 
-% Uncertain Plant
-ld_un = ss(A, B, C, D);
-P_ld_un = tf(ld); % Uncertain Plant continuous time t.f.
-G1 = [P_ld_un(1); P_ld_un(2)];
-
-%% Controller: R_p
+%% Uncertain Plant
 Ts = 0.004; % Sampling interval
 
+ld_un = ss(A, B, C, D);
+P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
+G1 = [P_ld_un(1); P_ld_un(2)];
+
+Trand = usample(P_ld_un, 10); % Random samples of uncertain model T
+
+time = 0:Ts:5;
+
+% Frequency response
+figure
+bodemag(Trand);  % Bode Plots with uncertainty
+
+figure
+bode(P_ld_un);
+
+figure
+step(P_ld_un, time);
+
+% Poles & Zeros
+poles = pole(P_ld_un);
+zeros = tzero(P_ld_un);
+
+figure;
+hold on
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+p1 = plot(real(poles), imag(poles), 'x', 'linewidth', 2);
+p2 = plot([zeros, 0, 0], [0, 0, 0], 'o', 'linewidth', 2);
+% (Two zeros at the origin for plotting purposes)
+
+h = [p1, p2];
+title ('All Poles and Zeros', 'Interpreter', 'Latex');
+xlabel('Re, rad/s', 'Interpreter', 'Latex');
+ylabel('Im, rad/s', 'Interpreter', 'Latex');
+legend(h, 'Poles', 'Zeros', 'Interpreter', 'Latex');
+axis([-5 3 -4 4]);
+grid on
+grid minor
+hold off
+%% Controller: R_p
 b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
 Ap = [1 0; 0 0];
 Bp = [b -b; 0 0.5];
@@ -94,27 +129,6 @@ D_phi = ss(d3);
 % sNC = ss(A, B, C, D);
 % eigAc = eig(Ac);
 % 
-% %% Plots
-% % Eigenvalues Plot
-% 
-% figure;
-% 
-% hold on
-% ax = gca;
-% ax.XAxisLocation = 'origin';
-% ax.YAxisLocation = 'origin';
-% p1 = plot(real(eigAc), imag(eigAc), 'x', 'linewidth', 2); % Controlled
-% p2 = plot(real(eigA), imag(eigA), 'o', 'linewidth', 2); % Not controlled
-% 
-% h = [p1, p2];
-% title ('Eigenvalues Analysis', 'Interpreter', 'Latex');
-% xlabel('Re, rad/s', 'Interpreter', 'Latex');
-% ylabel('Im, rad/s', 'Interpreter', 'Latex');
-% legend(h, 'Controlled', 'Not Controlled', 'Interpreter', 'Latex');
-% grid on
-% grid minor
-% hold off
-% 
 % % Response plot
 % t = 0:Ts:1; % Time
 % t = t';
@@ -132,7 +146,7 @@ D_phi = ss(d3);
 % xlabel('t [s]', 'Interpreter', 'Latex');
 % ylabel('p [rad/s]', 'Interpreter', 'Latex');
 % legend('Controlled', 'Not Controlled', 'Interpreter', 'Latex');
-% 
+
 % subplot(1,2,2);
 % plot(t, yC(:,2), t, yNC(:,2));
 % grid on
