@@ -36,16 +36,15 @@ D = [0;
 Ts = 0.004; % Sampling interval
 % Nominal plant
 ld = ss(Anom, Bnom, C, D); % Nominal Plant
-P_ld = tf(ld); % Nominal Plant Continuous time t.f.
-G = [P_ld(1); P_ld(2)];
+P_ld = tf(ld); % Nominal Plant continuous time t.f.
+G0 = [P_ld(1); P_ld(2)];
+gain = [0; 2.976834512415036]; % 0 and 214.6/72.09
 pole(P_ld)
 
-% Uncertainty Plant
-ld_un = ss(A, B, C, D);
-
 % Uncertain Plant
-% ld_un_dis = c2d(ld_un, Ts, 'foh'); % NP in discrete time
-% P_ld = tf(ld_un_dis);
+ld_un = ss(A, B, C, D);
+P_ld_un = tf(ld); % Uncertain Plant continuous time t.f.
+G1 = [P_ld_un(1); P_ld_un(2)];
 
 %% Controller: R_p
 b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
