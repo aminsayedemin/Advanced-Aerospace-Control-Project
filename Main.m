@@ -52,10 +52,12 @@ Dp = [d1 d2];
 ssnom = ss(Ap, Bp, Cp, Dp); % Nominal Plant
 ss_dis = c2d(ssnom, Ts, 'foh'); % NP in discrete time
 P0 = tf(ss_dis);
-
+pole(ssnom(1))
+pole(ssnom(2))
 % Controller: R_phi
 d3 = 1;
 D_phi = d3;
+bode(ssnom)
 
 %% 1
 
