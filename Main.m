@@ -36,8 +36,9 @@ D = [0;
 ld = ss(Anom, Bnom, C, D); % Nominal Plant
 P_ld = tf(ld); % Nominal Plant continuous time t.f.
 G0 = [P_ld(1); P_ld(2)];
-gain = [0; 2.976834512415036]; % 0 and 214.6/72.09
+gain = [0; 214.6/72.09]; % 0 and 214.6/72.09
 % pole(P_ld)
+sigma(G0)
 
 % Uncertain Plant
 ld_un = ss(A, B, C, D);
