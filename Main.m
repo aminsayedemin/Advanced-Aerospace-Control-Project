@@ -38,40 +38,45 @@ P_ld = tf(ld); % Nominal Plant continuous time t.f.
 G0 = [P_ld(1); P_ld(2)];
 gain = [0; 214.6/72.09]; % 0 and 214.6/72.09
 
-%% Uncertain Plant
+%% Uncertain plant
 Ts = 0.004; % Sampling interval
 
 ld_un = ss(A, B, C, D);
 % P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
-G1 = [P_ld_un(1); P_ld_un(2)];
+% G1 = [P_ld_un(1); P_ld_un(2)];
 
 Trand = usample(ld_un, 10); % Random samples of uncertain model T
 
 time = 0 : Ts : 5;
 
 % Frequency response
-% figure
-% bodemag(Trand);  % Bode Plots with uncertainty
+figure
+bodemag(Trand);  % Bode Plots with uncertainty
 
 figure
 bode(ld_un);
 
 figure
-% step(P_ld_un, time);
 step(ld_un, time);
-
 
 figure;
 hold on
-sigma(P_ld_un(1));
-sigma(P_ld_un(2));
+sigma(ld_un(1));
+sigma(ld_un(2));
 legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
 hold off
 
 % Poles & Zeros
-poles = pole(P_ld_un);
-zeros = tzero(P_ld_un);
-% pzmap(P_ld_un);
+figure;
+hold on
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+iopzplot(ld_un(1));
+iopzplot(ld_un(2));
+% grid on
+% grid minor
+hold off
 
 figure;
 hold on
