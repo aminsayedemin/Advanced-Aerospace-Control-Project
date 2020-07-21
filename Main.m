@@ -42,23 +42,24 @@ gain = [0; 214.6/72.09]; % 0 and 214.6/72.09
 Ts = 0.004; % Sampling interval
 
 ld_un = ss(A, B, C, D);
-% ld_un_dis = c2d(ld_un, Ts, 'foh'); % NP in discrete time
-P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
+% P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
 G1 = [P_ld_un(1); P_ld_un(2)];
 
-Trand = usample(P_ld_un, 10); % Random samples of uncertain model T
+Trand = usample(ld_un, 10); % Random samples of uncertain model T
 
-time = 0:Ts:5;
+time = 0 : Ts : 5;
 
 % Frequency response
 % figure
 % bodemag(Trand);  % Bode Plots with uncertainty
 
 figure
-bode(P_ld_un);
+bode(ld_un);
 
 figure
-step(P_ld_un, time);
+% step(P_ld_un, time);
+step(ld_un, time);
+
 
 figure;
 hold on
@@ -82,7 +83,7 @@ p2 = plot([zeros, 0, 0], [0, 0, 0], 'o', 'linewidth', 2);
 % (Two zeros at the origin for plotting purposes)
 
 h = [p1, p2];
-title ('All Poles and Zeros', 'Interpreter', 'Latex');
+title ('All nominal Poles and Zeros', 'Interpreter', 'Latex');
 xlabel('Re, rad/s', 'Interpreter', 'Latex');
 ylabel('Im, rad/s', 'Interpreter', 'Latex');
 legend(h, 'Poles', 'Zeros', 'Interpreter', 'Latex');
