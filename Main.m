@@ -42,6 +42,7 @@ gain = [0; 214.6/72.09]; % 0 and 214.6/72.09
 Ts = 0.004; % Sampling interval
 
 ld_un = ss(A, B, C, D);
+% ld_un_dis = c2d(ld_un, Ts, 'foh'); % NP in discrete time
 P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
 G1 = [P_ld_un(1); P_ld_un(2)];
 
@@ -69,6 +70,7 @@ hold off
 % Poles & Zeros
 poles = pole(P_ld_un);
 zeros = tzero(P_ld_un);
+% pzmap(P_ld_un);
 
 figure;
 hold on
@@ -102,61 +104,5 @@ P_p = tf(rp_dis);
 
 %% Controller: R_phi
 d3 = tunableGain('d3', 1, 1);
-% d3 = 1;
+d3 = 1;
 D_phi = ss(d3);
-
-% %% LQR Problem
-% % Performance: \dot{p}
-% Cz = A(2,:);
-% Dzu = B(2);
-% 
-% Wzz = 1;
-% Wuu = 1; % Rho
-% 
-% % Riccati equation
-% Q = Cz' * Wzz * Cz;
-% S = Cz' * Wzz * Dzu;
-% R = Dzu' * Wzz * Dzu + Wuu;
-% invR = inv(R);
-% 
-% AA = A - B * invR * S';
-% RR = B * (invR * B');
-% QQ = Q - S *(invR * S');
-% P = are(AA, RR, QQ);
-% 
-% G0 = invR *(S' + B' * P); % Gain matrix
-% Ac = A - B * G0;
-% 
-% %% Transfer functions
-% Ts = 0.004; % Sampling interval (given)
-% 
-% % sC = ss(Ac, B, C, D, Ts); % Discrete time
-% % sNC = ss(A, B, C, D, Ts);
-% sC = ss(Ac, B, C, D); % Continous time
-% sNC = ss(A, B, C, D);
-% eigAc = eig(Ac);
-% 
-% % Response plot
-% t = 0:Ts:1; % Time
-% t = t';
-% n = sqrt(0.01) * randn(size(t)); % White noise of W = 0.01
-% 
-% yC = lsim(sC, n, t);
-% yNC = lsim(sNC, n, t);
-% 
-% 
-% figure;
-% 
-% subplot(1,2,1);
-% plot(t, yC(:,1), t, yNC(:,1));
-% grid on
-% xlabel('t [s]', 'Interpreter', 'Latex');
-% ylabel('p [rad/s]', 'Interpreter', 'Latex');
-% legend('Controlled', 'Not Controlled', 'Interpreter', 'Latex');
-
-% subplot(1,2,2);
-% plot(t, yC(:,2), t, yNC(:,2));
-% grid on
-% xlabel('t [s]', 'Interpreter', 'Latex');
-% ylabel('$\phi$ [rad]', 'Interpreter', 'Latex');
-% legend('Controlled', 'Not Controlled', 'Interpreter', 'Latex');
