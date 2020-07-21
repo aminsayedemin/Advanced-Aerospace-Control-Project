@@ -43,7 +43,7 @@ Ts = 0.004; % Sampling interval
 
 ld_un = ss(A, B, C, D);
 % P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
-G1 = [P_ld_un(1); P_ld_un(2)];
+G1 = [ld_un(1); ld_un(2)];
 
 Trand = usample(ld_un, 10); % Random samples of uncertain model T
 
@@ -63,14 +63,14 @@ step(ld_un, time);
 
 figure;
 hold on
-sigma(P_ld_un(1));
-sigma(P_ld_un(2));
+sigma(ld_un(1));
+sigma(ld_un(2));
 legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
 hold off
 
 % Poles & Zeros
-poles = pole(P_ld_un);
-zeros = tzero(P_ld_un);
+poles = pole(ld_un);
+zeros = tzero(ld_un);
 % pzmap(P_ld_un);
 
 figure;
