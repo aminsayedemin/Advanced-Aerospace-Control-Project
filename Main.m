@@ -37,7 +37,6 @@ ld = ss(Anom, Bnom, C, D); % Nominal Plant
 P_ld = tf(ld); % Nominal Plant continuous time t.f.
 G0 = [P_ld(1); P_ld(2)];
 gain = [0; 214.6/72.09]; % 0 and 214.6/72.09
-% sigma(G0)
 
 %% Uncertain Plant
 Ts = 0.004; % Sampling interval
@@ -51,14 +50,21 @@ Trand = usample(P_ld_un, 10); % Random samples of uncertain model T
 time = 0:Ts:5;
 
 % Frequency response
-figure
-bodemag(Trand);  % Bode Plots with uncertainty
+% figure
+% bodemag(Trand);  % Bode Plots with uncertainty
 
 figure
 bode(P_ld_un);
 
 figure
 step(P_ld_un, time);
+
+figure;
+hold on
+sigma(P_ld_un(1));
+sigma(P_ld_un(2));
+legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
+hold off
 
 % Poles & Zeros
 poles = pole(P_ld_un);
@@ -82,6 +88,7 @@ axis([-5 3 -4 4]);
 grid on
 grid minor
 hold off
+
 %% Controller: R_p
 b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
 Ap = [1 0; 0 0];
