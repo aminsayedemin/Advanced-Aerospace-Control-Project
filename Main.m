@@ -45,36 +45,36 @@ ld_un = ss(A, B, C, D);
 % P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
 % G1 = [P_ld_un(1); P_ld_un(2)];
 
-Trand = usample(ld_un, 10); % Random samples of uncertain model T
+% Trand = usample(ld_un, 10); % Random samples of uncertain model T
 
-time = 0 : Ts : 5;
+% time = 0 : Ts : 5;
 
 % Frequency response
-figure
-bodemag(Trand);  % Bode Plots with uncertainty
-
-figure
-bode(ld_un);
-
-figure
-step(ld_un, time);
+% figure
+% bodemag(Trand);  % Bode Plots with uncertainty
+% 
+% figure
+% bode(ld_un);
+% 
+% figure
+% step(ld_un, time);
 
 % figure;
-hold on
-sigma(ld_un(1));
-sigma(ld_un(2));
-legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
-hold off
+% hold on
+% sigma(ld_un(1));
+% sigma(ld_un(2));
+% legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
+% hold off
 
 % Poles & Zeros
-figure;
-hold on
-ax = gca;
-ax.XAxisLocation = 'origin';
-ax.YAxisLocation = 'origin';
-iopzplot(ld_un(1));
-iopzplot(ld_un(2));
-hold off
+% figure;
+% hold on
+% ax = gca;
+% ax.XAxisLocation = 'origin';
+% ax.YAxisLocation = 'origin';
+% iopzplot(ld_un(1));
+% iopzplot(ld_un(2));
+% hold off
 
 % figure;
 % hold on
