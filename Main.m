@@ -111,13 +111,15 @@ max = exp(-csi*pi/sqrt(1-csi^2)) + 1;
 
 M = max; % Peak of Sensitivity function
 omb = 10; % [rad/s] % Lower bound on crossover frequency of S
-A = 2; % Max value of S at steady state
+ampl = 1e-3; % Max value of S at steady state
 
 % Plant
-W1inv = makeweight(2, 0.2, 0.10, Ts);
+W1inv = makeweight(2, 0.2, 0.9);
+W1inv = c2d(W1inv, Ts, 'foh');
 W1 = 1/W1inv;
 
-W2inv = tf(200, 1, Ts);
+W2inv = tf(200,1);
+W2inv = c2d(W2inv, Ts, 'foh');
 W2 = 1/W2inv; % Weight on the control sensitivity
 
 W3 = []; % Weight of the complementary sensitivity (0 if nominal design)
@@ -150,5 +152,13 @@ Bp = [b -b; 0 0.5];
 Cp = [c1 c2];
 Dp = [d1 d2];
 
-sys = ss(Ap, Bp, Cp, Dp, Ts);
-K = hinfstruct(P, sys);
+rp_dis = ss(Ap, Bp, Cp, Dp, Ts); % Model of class "genss"
+Rp = hinfstruct(P, rp_dis);
+
+%% 2nd Order Response
+% csi = 0.9;
+% om = 10;
+% 
+% s = zpk('s');
+% F = om^2/(s^2 + 2*csi*om*s + om^2);
+% step(F)
