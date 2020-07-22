@@ -50,33 +50,31 @@ Trand = usample(ld_un, 10); % Random samples of uncertain model T
 time = 0 : Ts : 5;
 
 % Frequency response
-figure
-bodemag(Trand);  % Bode Plots with uncertainty
+% figure
+% bodemag(Trand);  % Bode Plots with uncertainty
 
-figure
-bode(ld_un);
+% figure
+% bode(ld_un);
 
-figure
-step(ld_un, time);
+% figure
+% step(ld_un, time);
 
-figure;
-hold on
-sigma(ld_un(1));
-sigma(ld_un(2));
-legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
-hold off
+% figure;
+% hold on
+% sigma(ld_un(1));
+% sigma(ld_un(2));
+% legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
+% hold off
 
 % Poles & Zeros
-figure;
-hold on
-ax = gca;
-ax.XAxisLocation = 'origin';
-ax.YAxisLocation = 'origin';
-iopzplot(ld_un(1));
-iopzplot(ld_un(2));
-% grid on
-% grid minor
-hold off
+% figure;
+% hold on
+% ax = gca;
+% ax.XAxisLocation = 'origin';
+% ax.YAxisLocation = 'origin';
+% iopzplot(ld_un(1));
+% iopzplot(ld_un(2));
+% hold off
 
 % figure;
 % hold on
@@ -103,10 +101,41 @@ Ap = [1 0; 0 0];
 Bp = [b -b; 0 0.5];
 Cp = [c1 c2];
 Dp = [d1 d2];
+% rp = ss(Ap, Bp, Cp, Dp); % Nominal Plant
+% rp_dis = c2d(rp, Ts, 'foh'); % NP in discrete time
+% P_p = tf(rp_dis);
 
-rp = ss(Ap, Bp, Cp, Dp); % Nominal Plant
-rp_dis = c2d(rp, Ts, 'foh'); % NP in discrete time
-P_p = tf(rp_dis);
+% Mixed Sensitivity Synthesis
+G = P_ld;
+
+csi = 0.9;
+max = exp(-csi*pi/sqrt(1-csi^2)) + 1;
+
+M = max; % Peak of Sensitivity function
+omb = 0.1; % [rad/s] % Lower bound on crossover frequency of S
+A = 2; %1e-3; % Max value of S at steady state
+
+% Plant
+s = zpk('s');
+W1inv = (s + A*omb)/(s/M + omb);
+W1 = 1/W1inv; % Performance Weight
+
+W2inv = tf(100, 1);
+W2 = 1/W2inv; % Weight on the control sensitivity
+W3 = []; % Weight of the complementary sensitivity (0 if nominal design)
+
+P = augw(G, W1, W2, W3); % SIMO vector to be optimized
+
+% Synthesize the controller: Structured synthesis
+K0 = tunablePID('C', 'pid');
+% opt = hinfstructOptions('Display', 'final', 'RandomStart', 5);
+% K = hinfstruct(P, K0, opt);
+K = hinfstruct(P, K0);
+
+% Closed-loop results
+figure(1), bode(G, K, G*K), grid, legend('G','K','G*K')
+figure(2), bode(1/(1 + G(1)*K(1)), W1inv),grid, legend('S','1/W1')
+figure(3), bode(K/(1 + G*K), W2inv),grid, legend('Q','1/W2')
 
 %% Controller: R_phi
 d3 = tunableGain('d3', 1, 1);
