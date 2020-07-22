@@ -112,8 +112,8 @@ csi = 0.9;
 max = exp(-csi*pi/sqrt(1-csi^2)) + 1;
 
 M = max; % Peak of Sensitivity function
-omb = 0.1; % [rad/s] % Lower bound on crossover frequency of S
-A = 2; %1e-3; % Max value of S at steady state
+omb = 10; % [rad/s] % Lower bound on crossover frequency of S
+A = 1e-3; % Max value of S at steady state
 
 % Plant
 s = zpk('s');
@@ -128,14 +128,12 @@ P = augw(G, W1, W2, W3); % SIMO vector to be optimized
 
 % Synthesize the controller: Structured synthesis
 K0 = tunablePID('C', 'pid');
-% opt = hinfstructOptions('Display', 'final', 'RandomStart', 5);
-% K = hinfstruct(P, K0, opt);
 K = hinfstruct(P, K0);
 
 % Closed-loop results
 figure(1), bode(G, K, G*K), grid, legend('G','K','G*K')
 figure(2), bode(1/(1 + G(1)*K(1)), W1inv),grid, legend('S','1/W1')
-figure(3), bode(K/(1 + G*K), W2inv),grid, legend('Q','1/W2')
+figure(3), bode(K(1)/(1 + G(1)*K(1)), W2inv),grid, legend('Q','1/W2')
 
 %% Controller: R_phi
 d3 = tunableGain('d3', 1, 1);
