@@ -45,56 +45,6 @@ ld_un = ss(A, B, C, D);
 % P_ld_un = tf(ld_un); % Uncertain Plant continuous time t.f.
 % G1 = [P_ld_un(1); P_ld_un(2)];
 
-% Trand = usample(ld_un, 10); % Random samples of uncertain model T
-
-% time = 0 : Ts : 5;
-
-% Frequency response
-% figure
-% bodemag(Trand);  % Bode Plots with uncertainty
-% 
-% figure
-% bode(ld_un);
-% 
-% figure
-% step(ld_un, time);
-
-% figure;
-% hold on
-% sigma(ld_un(1));
-% sigma(ld_un(2));
-% legend('t.f. with output $\phi$', 't.f. with output $p$', 'interpreter', 'latex');
-% hold off
-
-% Poles & Zeros
-% figure;
-% hold on
-% ax = gca;
-% ax.XAxisLocation = 'origin';
-% ax.YAxisLocation = 'origin';
-% iopzplot(ld_un(1));
-% iopzplot(ld_un(2));
-% hold off
-
-% figure;
-% hold on
-% ax = gca;
-% ax.XAxisLocation = 'origin';
-% ax.YAxisLocation = 'origin';
-% p1 = plot(real(poles), imag(poles), 'x', 'linewidth', 2);
-% p2 = plot([zeros, 0, 0], [0, 0, 0], 'o', 'linewidth', 2);
-% % (Two zeros at the origin for plotting purposes)
-% 
-% h = [p1, p2];
-% title ('All nominal Poles and Zeros', 'Interpreter', 'Latex');
-% xlabel('Re, rad/s', 'Interpreter', 'Latex');
-% ylabel('Im, rad/s', 'Interpreter', 'Latex');
-% legend(h, 'Poles', 'Zeros', 'Interpreter', 'Latex');
-% axis([-5 3 -4 4]);
-% grid on
-% grid minor
-% hold off
-
 %% Controller: R_p
 b = 1; c1 = 1; c2 = 1; d1 = 1; d2 = 1;
 Ap = [1 0; 0 0];
