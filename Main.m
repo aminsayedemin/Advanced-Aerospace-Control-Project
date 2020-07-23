@@ -105,6 +105,8 @@ Dp = [d1 d2];
 % Mixed Sensitivity Synthesis
 ld_dis = c2d(ld, Ts, 'foh');
 G = tf(ld_dis);
+G.u = 'delta_lat';
+G.y = {'phi','p'};
 
 csi = 0.9;
 max = exp(-csi*pi/sqrt(1-csi^2)) + 1;
@@ -135,25 +137,38 @@ figure(1), bode(G, K, G*K), grid, legend('G','K','G*K');
 figure(2), bode(1/(1 + G(1)*K(1)), W1inv),grid, legend('S','1/W1');
 figure(3), bode(K(1)/(1 + G(1)*K(1)), W2inv),grid, legend('Q','1/W2');
 
-%% Controller: R_phi
-d3 = tunableGain('d3', 1, 1);
-d3 = 1;
-D_phi = ss(d3);
-
 %% Trial for R_p
-b = realp('b', 0);
-c1 = realp('c1',0);
-c2 = realp('c2',0);
-d1 = realp('d1',0);
-d2 = realp('d2',0);
+b = realp('b', 1);
+c1 = realp('c1',1);
+c2 = realp('c2',1);
+d1 = realp('d1',1);
+d2 = realp('d2',1);
 
 Ap = [1 0; 0 0];
 Bp = [b -b; 0 0.5];
 Cp = [c1 c2];
 Dp = [d1 d2];
 
-rp_dis = ss(Ap, Bp, Cp, Dp, Ts); % Model of class "genss"
-Rp = hinfstruct(P, rp_dis);
+sysp = ss(Ap, Bp, Cp, Dp, Ts);
+sysp.u = {'p_0','p'};
+sysp.y = 'delta_lat';
+
+%% Controller: R_phi
+% d3 = tunableGain('d3', 1, 1);
+% d3 = 1;
+% D_phi = ss(d3);
+d3 = realp('d3', 1);
+Dphi = [d3];
+
+sysphi = ss(0, 0, 0, Dphi, Ts);
+sysphi.u = 'e_phi';
+sysphi.y = 'p_0';
+
+%% Assembly
+Sum = sumblk('e_phi = phi_0 - phi');
+Loop = connect(G, sysp, sysphi, Sum, {'phi_0'}, {'phi', 'p'});
+K = hinfstruct(P, Loop);
+ss(K)
 
 %% 2nd Order Response
 % csi = 0.9;
