@@ -80,12 +80,12 @@ P = augw(G, W1, W2, W3); % SIMO vector to be optimized
 
 % Synthesize the controller: Structured synthesis
 K0 = tunablePID('R_p', 'PI', Ts);
-K = hinfstruct(P, K0);
+% K = hinfstruct(P, K0);
 
 % Closed-loop results
-figure(1), bode(G, K, G*K), grid, legend('G','K','G*K');
-figure(2), bode(1/(1 + G(1)*K(1)), W1inv),grid, legend('S','1/W1');
-figure(3), bode(K(1)/(1 + G(1)*K(1)), W2inv),grid, legend('Q','1/W2');
+% figure(1), bode(G, K, G*K), grid, legend('G','K','G*K');
+% figure(2), bode(1/(1 + G(1)*K(1)), W1inv),grid, legend('S','1/W1');
+% figure(3), bode(K(1)/(1 + G(1)*K(1)), W2inv),grid, legend('Q','1/W2');
 
 %% Trial for R_p
 b = realp('b', 1);
