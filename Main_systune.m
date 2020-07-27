@@ -110,3 +110,24 @@ subplot(212), step(K(2));
 %   -2.004010706564398
 %    2.066434147615174
 % the two graph are respected (but FSOFT > 1).
+
+%% Redefinition
+% % Controller: R_p
+% b = K.Blocks.b.Value;
+% c1 = K.Blocks.c1.Value;
+% c2 = K.Blocks.c2.Value;
+% d1 = K.Blocks.d1.Value;
+% d2 = K.Blocks.d2.Value;
+% 
+% Ap = [1 0; 0 0];
+% Bp = [b -b; 0 0.5];
+% Cp = [c1 c2];
+% Dp = [d1 d2];
+% 
+% Rp = ss(Ap, Bp, Cp, Dp, Ts);
+% 
+% % Controller: R_phi
+% d3 = K.Blocks.d3.Value;
+% Dphi = d3;
+% 
+% Rphi = ss(0, 0, 0, Dphi, Ts);
