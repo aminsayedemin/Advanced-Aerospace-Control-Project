@@ -74,51 +74,47 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 %% Weights
-% W1
-csi = 0.99;
-om = 25;
+% % W1
+csi = 0.9;
+om = 15;
 
 F2 = tf([om^2], [1, 2*csi*om, om^2]);
 F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
-% A = 1e-3; omb = 10; M = 2;
-% s = zpk('s');
-% S_des = (s + A * omb)/(s/M + omb);
-% S_des = c2d(S_des, Ts, 'foh');
-
-% W1inv = makeweight(0.01, 40, 2);
-
 W1inv = S_des;
-% W1inv = c2d(W1inv, Ts, 'foh');
 W1 = 1/W1inv;
 
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
-% W2
-% W2inv = tf(0, 1);
-% W2inv = c2d(W2inv, Ts, 'foh');
-% W2 = 1/W2inv; % Weight on the control sensitivity
-% W2.u = {'delta_lat'};
-% W2.y = {'z_2'};
-
+% % W2
+% % W2inv = tf(0, 1);
+% % W2inv = c2d(W2inv, Ts, 'foh');
+% % W2 = 1/W2inv; % Weight on the control sensitivity
+% % W2.u = {'delta_lat'};
+% % W2.y = {'z_2'};
+% 
 % W3 % Weight of the complementary sensitivity (0 if nominal design)
 W3inv = F2;
-% W3inv = c2d(W3inv, Ts, 'foh');
-W3 = 1/W3inv;
-% W3 = c2d(W3, Ts, 'foh');
-
+W3 = W3inv;
 W3.u = {'phi'};
 W3.y = {'z_3'};
 
+Wm = tf([om^2], [1, 2*csi*om, om^2]);
+Wm = c2d(Wm, Ts, 'foh');
+Wm.u = 'phi_0';
+Wm.y = 'm';
+
+
 %% Assembly
-Sum = sumblk('e_phi = phi_0 - phi');
+Sum1 = sumblk('e_phi = phi_0 - phi');
+Sum2 = sumblk('tracking_error = phi - m');
 
 OPT = connectOptions('Simplify', false);
-CL0 = connect(G_dis, Rp, Rphi, W1, W3, Sum, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'}, OPT);
+CL0 = connect(G_dis, Rp, Rphi, Wm, W1,Sum1, Sum2, {'phi_0'}, {'p', 'tracking_error','z_1'}, OPT);
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 10);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 2);
 [K, GAM, INFO] = hinfstruct(CL0, opt);
 
 [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
@@ -150,6 +146,7 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 % Reassembly
+Sum = sumblk('e_phi = phi_0 - phi');
 L = connect(G_dis, Rp, Rphi, {'e_phi'}, {'phi'}, OPT);
 Loop = connect(G_dis, Rp, Rphi, Sum, 'phi_0', {'p', 'phi'}, OPT);
 
@@ -160,7 +157,7 @@ Q = Rphi/(1+L);
 
 %% Plots
 % figure, bode(G_dis, K, G*K), grid, legend('G','K','G*K');
-figure, bode(S, W1inv), grid, legend('S', '1/W1');
+% figure, bode(S, W1inv), grid, legend('S', '1/W1');
 
 % Requirement
 figure;
@@ -169,14 +166,14 @@ step(Loop(2), 5);
 grid minor
 
 subplot(212);
-step(F2, 5);
+step(Wm, 5);
 grid minor
 legend('Desired');
 
-figure;
-margin(S);
-grid on
-title('Margin of S');
+% figure;
+% margin(S);
+% grid on
+% title('Margin of S');
 
 % figure, bode(Q, W2inv),grid, legend('Q','1/W2');
 % figure, bode(F, W3inv),grid, legend('F','1/W3');
