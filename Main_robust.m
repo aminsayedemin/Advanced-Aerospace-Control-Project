@@ -105,7 +105,7 @@ Sum1 = sumblk('e_phi = phi_0 - phi');
 CL0 = connect(G_dis, Rp, Rphi, W1, W3, Sum1, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'});
 % CL0 = connect(G_dis, Rp, Rphi, Wm, W1, Sum1, Sum2, {'phi_0'}, {'p', 'tracking_error','z_1'});
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 2);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 10);
 [K, GAM, INFO] = hinfstruct(CL0, opt);
 
 % [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
