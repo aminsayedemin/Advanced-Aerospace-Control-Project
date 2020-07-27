@@ -81,7 +81,7 @@ Sum = sumblk('e_phi = phi_0 - phi');
 T0 = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
 
 csi = 0.9;
-om = 12;
+om = 10;
 
 s = zpk('s');
 F2 = om^2/(s^2 + 2*csi*om*s + om^2);
@@ -93,7 +93,7 @@ soft = TuningGoal.Transient('phi_0', 'phi', refsys, 'step');
 hard = TuningGoal.Overshoot('phi_0', 'p', 10);
 
 options = systuneOptions;
-options.RandomStart = 50;
+options.RandomStart = 10;
 [K, FSOFT, GHARD, INFO] = systune(T0, soft, hard, options); % Soft: Objective, Hard: Constraint
 FSOFT, GHARD
 subplot(211), step(K(1));
@@ -103,11 +103,10 @@ subplot(212), step(K(2));
 %     K.Blocks.d1.Value; K.Blocks.d2.Value; K.Blocks.d3.Value]
 
 % With these,
-% 1e+2 * 
-%   -0.002003594258547
-%   -0.000069001428691
-%    2.689636895752912
-%   -0.002522385587434
-%   -1.363731288995523
-%    0.010485385691213
-% the two graph are respected, but FSOFT > 1.
+%    0.375874005430437
+%    0.008663389048878
+%   -0.118536064022561
+%    1.035930341948536
+%   -2.004010706564398
+%    2.066434147615174
+% the two graph are respected (but FSOFT > 1).
