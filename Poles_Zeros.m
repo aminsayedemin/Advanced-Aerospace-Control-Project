@@ -20,7 +20,7 @@ A = [Y_v    Y_p     g;
     L_v     L_p     0;
     0       1       0];
 N = size(A);
-Anom = A.NominalValue; % The matrix with its nominal value
+Anom = A.NominalValue; % The matrix A with its nominal value
 
 B = [Y_d;
     L_d;
