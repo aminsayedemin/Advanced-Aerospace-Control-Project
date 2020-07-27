@@ -77,10 +77,20 @@ F2 = tf([om^2], [1, 2*csi*om, om^2]);
 F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
+A = 1e-3; omb = 5; M = 1.01;
+s = zpk('s');
+S_des = (s+A*omb)/(s/M+omb);
+S_des = c2d(S_des, Ts, 'foh');
+
 W1inv = S_des;
 W1 = 1/S_des;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
+
+% Plot
+figure;
+bode(W1inv);
+grid
 
 W2inv = tf(200, 1, Ts);
 W2 = 1/W2inv; % Weight on the control sensitivity
@@ -138,16 +148,29 @@ Rphi = ss(0, 0, 0, Dphi, Ts);
 Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
+% Reassembly
 L = connect(G, Rp, Rphi, {'e_phi'}, {'phi'}, OPT);
 Loop = connect(G, Rp, Rphi, Sum, 'phi_0', {'p', 'phi'}, OPT);
-% L = L(2);
 
 S = 1/(1+L);
 F = L/(1+L);
 Q = Rphi/(1+L);
 
+%% Plots
 % figure, bode(G, K, G*K), grid, legend('G','K','G*K');
-figure, bode(S, W1inv), grid, legend('S', '1/W1');
-figure, step(Loop), grid, legend
+% figure, bode(S, W1inv), grid, legend('S', '1/W1');
+
+% Requirement
+subplot(211)
+step(Loop, 5);
+grid minor
+
+subplot(212);
+step(F2, 5);
+grid minor
+legend('Desired');
+
 % figure, bode(Q, W2inv),grid, legend('Q','1/W2');
 % figure, bode(F, W3inv),grid, legend('F','1/W3');
+
+%% END OF CODE
