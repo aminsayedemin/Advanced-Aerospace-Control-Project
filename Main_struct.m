@@ -104,8 +104,8 @@ Sum = sumblk('e_phi = phi_0 - phi');
 
 OPT = connectOptions('Simplify', false);
 % Loop = connect(G, Rp, Rphi, W1, W2, W3, Sum, {'phi_0'}, {'p', 'phi', 'z_1', 'z_2', 'z_3'}, OPT);
-% CL0 = connect(G, Rp, Rphi, W1, Sum, {'phi_0'}, {'p', 'phi', 'z_1'}, OPT);
-CL0 = connect(G, Rp, Rphi, W1, W2, Sum, {'phi_0'}, {'p', 'phi', 'z_1', 'z_2'}, OPT);
+CL0 = connect(G, Rp, Rphi, W1, Sum, {'phi_0'}, {'p', 'phi', 'z_1'}, OPT);
+% CL0 = connect(G, Rp, Rphi, W1, W2, Sum, {'phi_0'}, {'p', 'phi', 'z_1', 'z_2'}, OPT);
 
 opt = hinfstructOptions('Display', 'final', 'RandomStart', 10);
 [K, GAM, INFO] = hinfstruct(CL0, opt);
