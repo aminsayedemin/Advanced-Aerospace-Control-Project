@@ -66,20 +66,30 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 %% Weights
+<<<<<<< HEAD
 csi = 0.9;
 om = 10;
+=======
+% % W1
+csi = 0.9;
+om = 15;
+>>>>>>> 0f40e70c9d0a7ae8c2f339190c04a687ea91039b
 
 F2 = tf([om^2], [1, 2*csi*om, om^2]);
 F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
+<<<<<<< HEAD
 % Weight on the sensitivity function
+=======
+>>>>>>> 0f40e70c9d0a7ae8c2f339190c04a687ea91039b
 W1inv = S_des;
 W1 = 1/W1inv;
 
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
+<<<<<<< HEAD
 % Weight on the control sensitivity
 % W2inv = tf(0, 1);
 % W2inv = c2d(W2inv, Ts, 'foh');
@@ -91,15 +101,39 @@ W1.y = {'z_1'};
 W3inv = F2;
 W3 = W3inv;
 
+=======
+% % W2
+% % W2inv = tf(0, 1);
+% % W2inv = c2d(W2inv, Ts, 'foh');
+% % W2 = 1/W2inv; % Weight on the control sensitivity
+% % W2.u = {'delta_lat'};
+% % W2.y = {'z_2'};
+% 
+% W3 % Weight of the complementary sensitivity (0 if nominal design)
+W3inv = F2;
+W3 = W3inv;
+>>>>>>> 0f40e70c9d0a7ae8c2f339190c04a687ea91039b
 W3.u = {'phi'};
 W3.y = {'z_3'};
 
+Wm = tf([om^2], [1, 2*csi*om, om^2]);
+Wm = c2d(Wm, Ts, 'foh');
+Wm.u = 'phi_0';
+Wm.y = 'm';
+
+
 %% Assembly
-Sum = sumblk('e_phi = phi_0 - phi');
+Sum1 = sumblk('e_phi = phi_0 - phi');
+Sum2 = sumblk('tracking_error = phi - m');
 
+<<<<<<< HEAD
 CL0 = connect(G_dis, Rp, Rphi, W1, W3, Sum, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'});
+=======
+OPT = connectOptions('Simplify', false);
+CL0 = connect(G_dis, Rp, Rphi, Wm, W1,Sum1, Sum2, {'phi_0'}, {'p', 'tracking_error','z_1'}, OPT);
+>>>>>>> 0f40e70c9d0a7ae8c2f339190c04a687ea91039b
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 10);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 2);
 [K, GAM, INFO] = hinfstruct(CL0, opt);
 
 % [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
@@ -131,14 +165,25 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 % Reassembly
+<<<<<<< HEAD
+=======
+Sum = sumblk('e_phi = phi_0 - phi');
+L = connect(G_dis, Rp, Rphi, {'e_phi'}, {'phi'}, OPT);
+>>>>>>> 0f40e70c9d0a7ae8c2f339190c04a687ea91039b
 Loop = connect(G_dis, Rp, Rphi, Sum, 'phi_0', {'p', 'phi'}, OPT);
 
 %% Plots
+<<<<<<< HEAD
 csi = 0.9; om = 10; % Lower Bounds - Desired System
 F_lim = tf([om^2], [1, 2*csi*om, om^2]); % Desired Complementary Sensitivity
 F_lim = c2d(F_lim, Ts, 'foh');
+=======
+% figure, bode(G_dis, K, G*K), grid, legend('G','K','G*K');
+% figure, bode(S, W1inv), grid, legend('S', '1/W1');
+>>>>>>> 0f40e70c9d0a7ae8c2f339190c04a687ea91039b
 
 figure;
+<<<<<<< HEAD
 s1 = [];
 for i = 1:size(Loop(2,1,:,1),3)
     y = step(tf(Loop(2,1,i,1)), 0:Ts:10); % Step of our system
@@ -155,6 +200,21 @@ xlabel('Time [s]', 'Interpreter', 'Latex');
 ylabel ('Amplitude', 'Interpreter', 'Latex');
 axis ([0 5 -0.2 1.2]);
 grid on
+=======
+subplot(211)
+step(Loop(2), 5);
+grid minor
+
+subplot(212);
+step(Wm, 5);
+grid minor
+legend('Desired');
+
+% figure;
+% margin(S);
+% grid on
+% title('Margin of S');
+>>>>>>> 0f40e70c9d0a7ae8c2f339190c04a687ea91039b
 
 % Sensitivity
 S = connect(G_dis, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}, OPT);
