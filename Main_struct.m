@@ -77,9 +77,9 @@ F2 = tf([om^2], [1, 2*csi*om, om^2]);
 F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
-A = 1e-3; omb = 5; M = 1.01;
+A = 1e-3; omb = 10; M = 2;
 s = zpk('s');
-S_des = (s+A*omb)/(s/M+omb);
+S_des = (s + A * omb)/(s/M + omb);
 S_des = c2d(S_des, Ts, 'foh');
 
 W1inv = S_des;
@@ -89,7 +89,7 @@ W1.y = {'z_1'};
 
 % Plot
 figure;
-bode(W1inv);
+margin(W1inv);
 grid
 
 W2inv = tf(200, 1, Ts);
@@ -158,9 +158,10 @@ Q = Rphi/(1+L);
 
 %% Plots
 % figure, bode(G, K, G*K), grid, legend('G','K','G*K');
-% figure, bode(S, W1inv), grid, legend('S', '1/W1');
+figure, bode(S, W1inv), grid, legend('S', '1/W1');
 
 % Requirement
+figure;
 subplot(211)
 step(Loop, 5);
 grid minor
