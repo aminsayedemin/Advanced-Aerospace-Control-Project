@@ -70,44 +70,52 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 %% Weights
+% W1
 csi = 0.9;
 om = 10;
 
 F2 = tf([om^2], [1, 2*csi*om, om^2]);
 F2 = c2d(F2, Ts, 'foh');
-S_des = 1 - F2;
+% S_des = 1 - F2;
+% 
+% A = 1e-3; omb = 10; M = 2;
+% s = zpk('s');
+% S_des = (s + A * omb)/(s/M + omb);
+% S_des = c2d(S_des, Ts, 'foh');
 
-A = 1e-3; omb = 10; M = 2;
-s = zpk('s');
-S_des = (s + A * omb)/(s/M + omb);
-S_des = c2d(S_des, Ts, 'foh');
+% W1inv = S_des;
+% W1 = 1/S_des;
+W1inv = makeweight(0.01, 40, 2);
+W1inv = c2d(W1inv, Ts, 'foh');
+W1 = 1/W1inv;
 
-W1inv = S_des;
-W1 = 1/S_des;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
 % Plot
-figure;
-margin(W1inv);
-grid
+% figure;
+% margin(W1inv);
+% grid
+% 
+% % W2
+% W2inv = tf(500, 1);
+% W2inv = c2d(W2inv, Ts, 'foh');
+% 
+% W2 = 1/W2inv; % Weight on the control sensitivity
 
-W2inv = tf(200, 1, Ts);
-W2 = 1/W2inv; % Weight on the control sensitivity
-
-W2 = tf(0);
+% W2 = tf(0);
 
 W2.u = {'delta_lat'};
 W2.y = {'z_2'};
 
-% Weight of the complementary sensitivity (0 if nominal design)
-W3inv = F2;
-W3 = 1/W3inv;
-
-W3 = tf(0);
-
-W3.u = {'phi'};
-W3.y = {'z_3'};
+% W3 % Weight of the complementary sensitivity (0 if nominal design)
+% W3inv = F2;
+% W3 = 1/W3inv;
+% 
+% W3 = tf(0);
+% 
+% W3.u = {'phi'};
+% W3.y = {'z_3'};
 
 %% Assembly
 Sum = sumblk('e_phi = phi_0 - phi');
@@ -117,7 +125,7 @@ OPT = connectOptions('Simplify', false);
 CL0 = connect(G, Rp, Rphi, W1, Sum, {'phi_0'}, {'p', 'phi', 'z_1'}, OPT);
 % CL0 = connect(G, Rp, Rphi, W1, W2, Sum, {'phi_0'}, {'p', 'phi', 'z_1', 'z_2'}, OPT);
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 10);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 5);
 [K, GAM, INFO] = hinfstruct(CL0, opt);
 
 % [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
@@ -152,7 +160,8 @@ Rphi.y = {'p_0'};
 L = connect(G, Rp, Rphi, {'e_phi'}, {'phi'}, OPT);
 Loop = connect(G, Rp, Rphi, Sum, 'phi_0', {'p', 'phi'}, OPT);
 
-S = 1/(1+L);
+S = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}, OPT);
+% S = 1/(1+L);
 F = L/(1+L);
 Q = Rphi/(1+L);
 
@@ -163,13 +172,18 @@ figure, bode(S, W1inv), grid, legend('S', '1/W1');
 % Requirement
 figure;
 subplot(211)
-step(Loop, 5);
+step(Loop(2), 5);
 grid minor
 
 subplot(212);
 step(F2, 5);
 grid minor
 legend('Desired');
+
+figure;
+margin(S);
+grid on
+title('Margin of S');
 
 % figure, bode(Q, W2inv),grid, legend('Q','1/W2');
 % figure, bode(F, W3inv),grid, legend('F','1/W3');
