@@ -34,12 +34,18 @@ D = [0;
     0];
 
 %% Uncertain plant
-ld_un = ss(A, B, C, D);
+smpls = 20; % Number of Samples to use in "usample"
 
-G = usample(ld_un, 10);
+ld_un = ss(A, B, C, D);
+G = usample(ld_un, smpls);
 G_dis = c2d(G, Ts, 'foh');
 G_dis.u = {'delta_lat'};
 G_dis.y = {'p', 'phi'};
+
+% ld_un_dis = ss(A, B, C, D);
+% G_un = tf(ld_un_dis);
+% G_un.u = {'delta_lat'};
+% G_un.y = {'p', 'phi'};
 
 %% Controller: R_p
 b = realp('b', 1);
@@ -54,6 +60,8 @@ Cp = [c1 c2];
 Dp = [d1 d2];
 
 Rp = ss(Ap, Bp, Cp, Dp, Ts);
+% Rp = ss(Ap, Bp, Cp, Dp);
+
 Rp.u = {'p_0', 'p'};
 Rp.y = {'delta_lat'};
 
@@ -62,12 +70,14 @@ d3 = realp('d3', 1);
 Dphi = [d3];
 
 Rphi = ss(0, 0, 0, Dphi, Ts);
+% Rphi = ss(0, 0, 0, Dphi);
+
 Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 %% Weights
-csi = 0.9;
-om = 10;
+csi = 0.15;
+om = 9;
 
 F2 = tf([om^2], [1, 2*csi*om, om^2]);
 F2 = c2d(F2, Ts, 'foh');
@@ -102,10 +112,12 @@ W3.y = {'z_3'};
 Sum1 = sumblk('e_phi = phi_0 - phi');
 % Sum2 = sumblk('tracking_error = phi - m');
 
-CL0 = connect(G_dis, Rp, Rphi, W1, W3, Sum1, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'});
+CL0 = connect(G_dis, Rp, Rphi, W1, Sum1, {'phi_0'}, {'p', 'phi', 'z_1'});
+% CL0 = connect(G_dis, Rp, Rphi, W1, W3, Sum1, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'});
+
 % CL0 = connect(G_dis, Rp, Rphi, Wm, W1, Sum1, Sum2, {'phi_0'}, {'p', 'tracking_error','z_1'});
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 10);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 5);
 [K, GAM, INFO] = hinfstruct(CL0, opt);
 
 % [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
@@ -139,7 +151,26 @@ Rphi.y = {'p_0'};
 % Reassembly
 Loop = connect(G_dis, Rp, Rphi, Sum1, 'phi_0', {'p', 'phi'});
 
+%% Robustness analysis
+% T = connect(G_un, Rp, Rphi, Sum1, 'phi_0', {'p', 'phi'});
+% 
+% % Robust stability margin (>1 for stability)
+% opt = robOptions('Display','on', 'Sensitivity','on');
+% [StabilityMargin] = robstab(T, opt);
+% 
+% [PeakGain, wcu] = wcgain(T); % Worst peak gain over frequency
+% Twc = usubs(T,wcu); % Worst-case closed-loop transfer T
+% 
+% Trand = usample(T,4);
+% 
+% figure;
+% subplot(211), bodemag(Trand,'b',Twc,'r',{10 1000});
+% subplot(212), step(Trand,'b',Twc,'r',0.2);
+
 %% Plots
+% Step response and comparison
+Tf = 1.5; % Final time of the Step plot
+
 csi = 0.9; om = 10; % Lower Bounds - Desired System
 F_lim = tf([om^2], [1, 2*csi*om, om^2]); % Desired Complementary Sensitivity
 F_lim = c2d(F_lim, Ts, 'foh');
@@ -147,19 +178,19 @@ F_lim = c2d(F_lim, Ts, 'foh');
 figure;
 s1 = [];
 for i = 1:size(Loop(2,1,:,1),3)
-    y = step(tf(Loop(2,1,i,1)), 0:Ts:10); % Step of our system
+    y = step(tf(Loop(2,1,i,1)), Tf); % Step of our system
     s1 = [s1, y];
 end
-s2 = step(F_lim, 0:Ts:10); % Step of the desired system
+s2 = step(F_lim, Tf); % Step of the desired system
 
 hold on
-h1 = plot(0:Ts:10, s1, 'b');
-h2 = plot(0:Ts:10, s2, 'k');
+h1 = plot(0:Ts:Tf, s1, 'b');
+h2 = plot(0:Ts:Tf, s2, 'k');
 h = [h1(1), h2(1)];
-legend(h, 'Uncertain bundle', 'Lower bound', 'Interpreter', 'Latex');
+legend(h, 'Uncertain bundle', 'Lower bound', 'Interpreter', 'Latex', 'Location', 'southeast');
 xlabel('Time [s]', 'Interpreter', 'Latex');
 ylabel ('Amplitude', 'Interpreter', 'Latex');
-axis ([0 5 -0.2 1.2]);
+axis ([0 Tf -0.2 1.2]);
 grid on
 
 % Sensitivity
