@@ -9,12 +9,14 @@ clear all; close all; clc;
 Ts = 0.004; % Sampling interval
 g = 9.81;
 
-Y_v = ureal('yv', -0.264,'Perc', 4.837);
+Y_v = ureal('yv', -0.264, 'Perc', 3 * 4.837);
+max_Yv = Y_v.NominalValue + 3 * 4.837 * Y_v.NominalValue / 100;
+
 Y_p = 0;
-L_v = ureal('lv', -7.349,'Perc', 4.927);
+L_v = ureal('lv', -7.349,'Perc', 3 * 4.927);
 L_p = 0;
-Y_d = ureal('yd', 9.568,'Perc', 4.647);
-L_d = ureal('ld', 1079.339,'Perc', 2.762);
+Y_d = ureal('yd', 9.568,'Perc', 3 * 4.647);
+L_d = ureal('ld', 1079.339,'Perc', 3 * 2.762);
 
 A = [Y_v    Y_p     g;
     L_v     L_p     0;
@@ -33,19 +35,44 @@ C = [0      1       0;
 D = [0;
     0];
 
+%% Nominal Plant
+ld_nom = ss(Anom, Bnom, C, D);
+Gnom = c2d(ld_nom, Ts, 'foh');
+
 %% Uncertain plant
-smpls = 20; % Number of Samples to use in "usample"
+smpls = 30; % Number of samples to use in "usample"
 
 ld_un = ss(A, B, C, D);
 G = usample(ld_un, smpls);
 G_dis = c2d(G, Ts, 'foh');
+
 G_dis.u = {'delta_lat'};
 G_dis.y = {'p', 'phi'};
 
-% ld_un_dis = ss(A, B, C, D);
-% G_un = tf(ld_un_dis);
-% G_un.u = {'delta_lat'};
-% G_un.y = {'p', 'phi'};
+ld_un_dis = ss(A, B, C, D, Ts);
+G_un = tf(ld_un_dis);
+G_un.u = {'delta_lat'};
+G_un.y = {'p', 'phi'};
+
+% M -Delta decomposition
+[M, delta] = lftdata(ld_un);
+% G = Gnom * (1 + W * delta);
+err1 = (G_dis(1,1,:,1) - Gnom(1,1,:,1)) / Gnom(1,1,:,1);
+err2 = (G_dis(2,1,:,1) - Gnom(2,1,:,1)) / Gnom(2,1,:,1);
+
+[W, INFO] = ucover(G_dis(1,1,:,1), Gnom(1,1,:,1), 10);
+figure
+bode(err1, INFO.W1)
+
+[W, INFO] = ucover(G_dis(2,1,:,1), Gnom(2,1,:,1), 1);
+figure
+bode(err2, INFO.W1)
+W3 = INFO.W1;
+
+% err = (G_dis - Gnom);
+% [sys, INFO] = ucover(G_dis, Gnom, 3);
+% figure
+% bode(err, sys)
 
 %% Controller: R_p
 b = realp('b', 1);
@@ -98,10 +125,10 @@ W1.y = {'z_1'};
 % W2.y = {'z_2'};
 
 % Weight of the complementary sensitivity (0 if nominal design)
-W3inv = F2;
-W3 = W3inv;
-W3.u = {'phi'};
-W3.y = {'z_3'};
+% W3inv = F2;
+% W3 = 1/W3inv;
+% W3.u = {'phi'};
+% W3.y = {'z_3'};
 
 % Wm = tf([om^2], [1, 2*csi*om, om^2]);
 % Wm = c2d(Wm, Ts, 'foh');
@@ -114,10 +141,9 @@ Sum1 = sumblk('e_phi = phi_0 - phi');
 
 CL0 = connect(G_dis, Rp, Rphi, W1, Sum1, {'phi_0'}, {'p', 'phi', 'z_1'});
 % CL0 = connect(G_dis, Rp, Rphi, W1, W3, Sum1, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'});
-
 % CL0 = connect(G_dis, Rp, Rphi, Wm, W1, Sum1, Sum2, {'phi_0'}, {'p', 'tracking_error','z_1'});
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 5);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 10);
 [K, GAM, INFO] = hinfstruct(CL0, opt);
 
 % [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
@@ -199,5 +225,12 @@ figure;
 bode(S, W1inv);
 grid on;
 legend('S', '1/W1', 'Interpreter', 'Latex');
+
+% Complementery sensitivity
+F = connect(G_dis, Rp, Rphi, Sum1, {'phi_0'}, {'phi'});
+figure;
+bode(F, 1/W3);
+grid on;
+legend('F', '1/W3', 'Interpreter', 'Latex');
 
 %% END OF CODE
