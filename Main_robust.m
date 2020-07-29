@@ -62,13 +62,13 @@ G_un.y = {'p', 'phi'};
 err1 = (G_dis(1,1,:,1) - Gnom(1,1,:,1)) / Gnom(1,1,:,1);
 err2 = (G_dis(2,1,:,1) - Gnom(2,1,:,1)) / Gnom(2,1,:,1);
 
-[W, INFO] = ucover(G_dis(1,1,:,1), Gnom(1,1,:,1), 10);
-figure
-bode(err1, INFO.W1)
+% [W, INFO] = ucover(G_dis(1,1,:,1), Gnom(1,1,:,1), 10);
+% figure
+% bode(err1, INFO.W1)
 
 [W, INFO] = ucover(G_dis(2,1,:,1), Gnom(2,1,:,1), 1);
-figure
-bode(err2, INFO.W1)
+% figure
+% bode(err2, INFO.W1)
 W3 = INFO.W1;
 
 % err = (G_dis - Gnom);
@@ -105,8 +105,8 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 %% Weights
-csi = 0.15;
-om = 9;
+csi = 0.2;
+om = 8;
 
 F2 = tf([om^2], [1, 2*csi*om, om^2]);
 F2 = c2d(F2, Ts, 'foh');
@@ -141,12 +141,12 @@ W1.y = {'z_1'};
 Sum1 = sumblk('e_phi = phi_0 - phi');
 % Sum2 = sumblk('tracking_error = phi - m');
 
-CL0 = connect(G_dis, Rp, Rphi, W1, Sum1, {'phi_0'}, {'p', 'phi', 'z_1'});
-% CL0 = connect(G_dis, Rp, Rphi, W1, W3, Sum1, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'});
-% CL0 = connect(G_dis, Rp, Rphi, Wm, W1, Sum1, Sum2, {'phi_0'}, {'p', 'tracking_error','z_1'});
+CL0 = connect(Gnom, Rp, Rphi, W1, Sum1, {'phi_0'}, {'p', 'phi', 'z_1'});
+% CL0 = connect(Gnom, Rp, Rphi, W1, W3, Sum1, {'phi_0'}, {'p', 'phi', 'z_1', 'z_3'});
+% CL0 = connect(Gnom, Rp, Rphi, Wm, W1, Sum1, Sum2, {'phi_0'}, {'p', 'tracking_error','z_1'});
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 1);
-[K, GAM, INFO] = hinfstruct(CL0, opt);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 20);
+[K, GAM, INFO] = hinfstruct(CL0, opt)
 
 % [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
 %     K.Blocks.d1.Value; K.Blocks.d2.Value; K.Blocks.d3.Value]
@@ -229,7 +229,7 @@ grid on;
 legend('S', '1/W1', 'Interpreter', 'Latex');
 
 % Complementery sensitivity
-F = connect(G_dis, Rp, Rphi, Sum1, {'phi_0'}, {'phi'});
+F = connect(Gnom, Rp, Rphi, Sum1, {'phi_0'}, {'phi'});
 figure;
 bode(F, 1/W3);
 grid on;
