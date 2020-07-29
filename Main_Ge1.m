@@ -79,29 +79,32 @@ F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
 % Weight on the sensitivity function
-csi = 0.9;
-om = 10;
+csi = 0.2;
+om = 3;
 
 F_weight = tf([om^2], [1, 2*csi*om, om^2]);
 F_weight = c2d(F_weight, Ts, 'foh');
-% W1inv = 1 - F_weight;
-W1inv = makeweight(0.01,8,3.16, Ts);
+W1inv = 1 - F_weight;
+% W1inv = makeweight(0.01,8,3.16, Ts);
 W1 = 1/W1inv;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
-W2 = [];
+W2 = makeweight(0.01, [10], 100, Ts);
+W2 = tf(0);
+W2.u = {'delta_lat'};
+W2.y = {'z_2'};
 
 W3 = [];
 
 %% Assembly
 
 Sum = sumblk('e_phi = phi_0 - phi');
-P = connect(G_nom, Sum, W1, {'phi_0', 'delta_lat'}, {'phi', 'z_1', 'e_phi', 'p'});
+P = connect(G_nom, Sum, W1, W2, {'phi_0', 'delta_lat'}, {'p', 'z_1', 'z_2', 'e_phi', 'phi'});
 
 K0 = connect(Rp, Rphi, {'e_phi', 'p'},  {'delta_lat'});
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 20);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 80);
 [K, gamma, info] = hinfstruct(P, K0, opt)
 
 %% Redefinition
@@ -137,37 +140,40 @@ Rphi.y = {'p_0'};
 
 % Reassembly
 Loop = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
-
+figure
+pzmap(Loop(2))
 
 %% Plots
 % Step response and comparison
 Tf = 20; % Final time of the Step plot
 figure
-step(Loop, Tf); % Step of our system
-% s2 = step(F2, Tf); % Step of the desired system
-
-% figure
-% hold on
-% plot(0:Ts:Tf, y, 'b');
-% plot(0:Ts:Tf, s2, 'r');
-% legend('Actual response', 'Desired response', 'Interpreter', 'Latex', 'Location', 'southeast');
+y = step(Loop(2), Tf); % Step of our system
+plot(0:Ts:Tf, y);
+hold on
+f2 = step(F2, Tf);
+plot(0:Ts:Tf, f2);
+legend('Actual response', 'Desired response', 'Location', 'southeast');
 % xlabel('Time [s]', 'Interpreter', 'Latex');
 % ylabel ('Amplitude', 'Interpreter', 'Latex');
-% axis ([0 Tf -0.2 1.2]);
-% grid on
+axis ([0 Tf -0.2 1.2]);
+grid on
 
 % Sensitivity
 S = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'});
 figure
 bode(S, W1inv, S_des);
 grid on;
-legend('S', '1/W1', 'S_des', 'Interpreter', 'Latex');
+legend('S', '1/W1', 'S_des')
 
 % Complementary Sensitivity
 Loop = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'phi'});
 figure
 bode(Loop, F_weight, F2);
 grid on;
-legend('Loop', 'F_weight', 'F2', 'Interpreter', 'Latex');
+legend('Loop', 'F_weight', 'F2');
+
+figure
+bode(W2)
+grid on
 
 %% END OF CODE
