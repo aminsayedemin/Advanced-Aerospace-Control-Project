@@ -34,8 +34,8 @@ D = [0;
 
 G_nom = ss(A_nom, B_nom, C, D);
 G_nom = c2d(G_nom, Ts, 'foh');
-G_nom.u = {'delta_lat'};
-G_nom.y = {'p', 'phi'};
+G_nom.InputName = {'delta_lat'};
+G_nom.OutputName = {'p'; 'phi'};
 
 %% Controller: R_p
 
@@ -56,8 +56,8 @@ Cp = [c1    c2];
 Dp = [d1    d2];
 
 Rp = ss(Ap, Bp, Cp, Dp, Ts);
-Rp.u = {'p_0', 'p'};
-Rp.y = {'delta_lat'};
+Rp.InputName = {'p_0'; 'p'};
+Rp.OutputName = {'delta_lat'};
 
 %% Controller: R_phi
 
@@ -65,8 +65,8 @@ d3 = realp('d3', 1);
 Dphi = [d3];
 
 Rphi = ss(0, 0, 0, Dphi, Ts);
-Rphi.u = {'e_phi'};
-Rphi.y = {'p_0'};
+Rphi.InputName = {'e_phi'};
+Rphi.OutputName = {'p_0'};
 
 %% Weights
 
@@ -79,8 +79,8 @@ F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
 % Weight on the sensitivity function
-csi = 0.2;
-om = 3;
+csi = 0.9;
+om = 10;
 
 F_weight = tf([om^2], [1, 2*csi*om, om^2]);
 F_weight = c2d(F_weight, Ts, 'foh');
@@ -90,21 +90,21 @@ W1 = 1/W1inv;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
-W2 = makeweight(0.01, [10], 100, Ts);
+% W2 = makeweight(0, [0 1], 0, Ts);
 W2 = tf(0);
 W2.u = {'delta_lat'};
 W2.y = {'z_2'};
 
-W3 = [];
+W3 = tf(0);
 
 %% Assembly
 
 Sum = sumblk('e_phi = phi_0 - phi');
-P = connect(G_nom, Sum, W1, W2, {'phi_0', 'delta_lat'}, {'p', 'z_1', 'z_2', 'e_phi', 'phi'});
+% P = connect(Sum, G_nom, W1, {'phi_0', 'delta_lat'}, {'z_1', 'y(2)', 'y(1)', 'e_phi'});
+P = augw(G_nom, W1);
 
-K0 = connect(Rp, Rphi, {'e_phi', 'p'},  {'delta_lat'});
-
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 80);
+K0 = connect(Rphi, Rp, {'e_phi'; 'p'},  {'delta_lat'});
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 40);
 [K, gamma, info] = hinfstruct(P, K0, opt)
 
 %% Redefinition
@@ -115,7 +115,7 @@ c1 = K.Blocks.c1.Value
 c2 = K.Blocks.c2.Value
 d1 = K.Blocks.d1.Value
 d2 = K.Blocks.d2.Value
-
+clc
 Ap =    [1  0;
         0   0];
     
@@ -139,15 +139,15 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 % Reassembly
-Loop = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
+Loop = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'phi'});
 figure
-pzmap(Loop(2))
+pzmap(Loop)
 
 %% Plots
 % Step response and comparison
-Tf = 20; % Final time of the Step plot
+Tf = 4; % Final time of the Step plot
 figure
-y = step(Loop(2), Tf); % Step of our system
+y = step(Loop(1), Tf); % Step of our system
 plot(0:Ts:Tf, y);
 hold on
 f2 = step(F2, Tf);
