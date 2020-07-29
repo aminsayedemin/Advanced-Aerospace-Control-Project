@@ -100,8 +100,8 @@ W3 = tf(0);
 %% Assembly
 
 Sum = sumblk('e_phi = phi_0 - phi');
-% P = connect(Sum, G_nom, W1, {'phi_0', 'delta_lat'}, {'z_1', 'y(2)', 'y(1)', 'e_phi'});
-P = augw(G_nom, W1);
+P = connect(Sum, G_nom, W1, {'phi_0', 'delta_lat'}, {'z_1', 'phi', 'p', 'e_phi'});
+% P = augw(G_nom, W1);
 
 K0 = connect(Rphi, Rp, {'e_phi'; 'p'},  {'delta_lat'});
 opt = hinfstructOptions('Display', 'final', 'RandomStart', 40);
@@ -115,7 +115,7 @@ c1 = K.Blocks.c1.Value
 c2 = K.Blocks.c2.Value
 d1 = K.Blocks.d1.Value
 d2 = K.Blocks.d2.Value
-clc
+
 Ap =    [1  0;
         0   0];
     
