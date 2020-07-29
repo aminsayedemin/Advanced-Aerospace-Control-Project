@@ -79,12 +79,13 @@ F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
 % Weight on the sensitivity function
-csi = 0.95;
-om = 10.5;
+csi = 0.9;
+om = 10;
 
-F = tf([om^2], [1, 2*csi*om, om^2]);
-F = c2d(F, Ts, 'foh');
-W1inv = 1 - F;
+F_weight = tf([om^2], [1, 2*csi*om, om^2]);
+F_weight = c2d(F_weight, Ts, 'foh');
+% W1inv = 1 - F_weight;
+W1inv = makeweight(0.01,8,3.16, Ts);
 W1 = 1/W1inv;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
@@ -160,6 +161,13 @@ S = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'});
 figure
 bode(S, W1inv, S_des);
 grid on;
-legend('S', '1/W1', 'Interpreter', 'Latex');
+legend('S', '1/W1', 'S_des', 'Interpreter', 'Latex');
+
+% Complementary Sensitivity
+Loop = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'phi'});
+figure
+bode(Loop, F_weight, F2);
+grid on;
+legend('Loop', 'F_weight', 'F2', 'Interpreter', 'Latex');
 
 %% END OF CODE
