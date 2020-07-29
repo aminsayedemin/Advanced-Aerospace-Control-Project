@@ -79,8 +79,8 @@ F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
 % Weight on the sensitivity function
-csi = 0.9;
-om = 10;
+csi = 0.35;
+om = 9;
 
 F_weight = tf([om^2], [1, 2*csi*om, om^2]);
 F_weight = c2d(F_weight, Ts, 'foh');
@@ -100,12 +100,13 @@ W3 = tf(0);
 %% Assembly
 
 Sum = sumblk('e_phi = phi_0 - phi');
-P = connect(Sum, G_nom, W1, {'phi_0', 'delta_lat'}, {'z_1', 'phi', 'p', 'e_phi'});
+% P = connect(Sum, G_nom, W1, {'phi_0', 'delta_lat'}, {'z_1', 'phi', 'p', 'e_phi'});
 % P = augw(G_nom, W1);
+P = connect(Rp, W1, Sum, Rphi, G_nom, {'phi_0'}, {'z_1', 'phi'});
 
-K0 = connect(Rphi, Rp, {'e_phi'; 'p'},  {'delta_lat'});
+% K0 = connect(Rphi, Rp, {'e_phi'; 'p'},  {'delta_lat'});
 opt = hinfstructOptions('Display', 'final', 'RandomStart', 40);
-[K, gamma, info] = hinfstruct(P, K0, opt)
+[K, gamma, info] = hinfstruct(P, opt)
 
 %% Redefinition
 
