@@ -34,8 +34,8 @@ D = [0;
 
 G_nom = ss(A_nom, B_nom, C, D);
 G_nom = c2d(G_nom, Ts, 'foh');
-G_nom.InputName = {'delta_lat'};
-G_nom.OutputName = {'p'; 'phi'};
+G_nom.u = {'delta_lat'};
+G_nom.y = {'p'; 'phi'};
 
 %% Controller: R_p
 
@@ -56,8 +56,8 @@ Cp = [c1    c2];
 Dp = [d1    d2];
 
 Rp = ss(Ap, Bp, Cp, Dp, Ts);
-Rp.InputName = {'p_0'; 'p'};
-Rp.OutputName = {'delta_lat'};
+Rp.u = {'p_0'; 'p'};
+Rp.y = {'delta_lat'};
 
 %% Controller: R_phi
 
@@ -65,8 +65,8 @@ d3 = realp('d3', 1);
 Dphi = [d3];
 
 Rphi = ss(0, 0, 0, Dphi, Ts);
-Rphi.InputName = {'e_phi'};
-Rphi.OutputName = {'p_0'};
+Rphi.u = {'e_phi'};
+Rphi.y = {'p_0'};
 
 %% Weights
 
@@ -94,6 +94,7 @@ W1.y = {'z_1'};
 
 % Weight on the control sensitivity
 W2 = makeweight(0, [10 1], 100, Ts);
+W2inv = 1/W2;
 % W2inv = tf(500);
 % W2 = 1/W2inv;
 W2 = tf(0);
@@ -109,7 +110,7 @@ W3.y = {'z_3'};
 Sum = sumblk('e_phi = phi_0 - phi');
 % P = connect(Sum, G_nom, W1, {'phi_0', 'delta_lat'}, {'z_1', 'phi', 'p', 'e_phi'});
 % P = augw(G_nom, W1);
-P = connect(Rp, W1, W2, W3, Sum, Rphi, G_nom, {'phi_0'}, {'phi', 'p', 'z_1', 'z_2', 'z_3'});
+P = connect(Rp, W1, W2, W3, Sum, Rphi, G_nom, {'phi_0'}, {'p', 'phi', 'z_1', 'z_2', 'z_3'});
 % P = connect(Rp, W1, Sum, Rphi, G_nom, {'phi_0'}, {'z_1'});
 
 % K0 = connect(Rphi, Rp, {'e_phi'; 'p'},  {'delta_lat'});
@@ -155,7 +156,7 @@ pzmap(Loop)
 % Step response and comparison
 Tf = 4; % Final time of the Step plot
 figure
-y = step(Loop(1), Tf); % Step of our system
+y = step(Loop, Tf); % Step of our system
 plot(0:Ts:Tf, y);
 hold on
 f2 = step(F2, Tf);
