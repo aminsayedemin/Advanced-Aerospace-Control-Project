@@ -80,22 +80,22 @@ S_des = 1 - F2;
 
 % Weight on the sensitivity function
 csi = 0.92;
-om = 15;
+om = 13;
 
 F_weight = tf([om^2], [1, 2*csi*om, om^2]);
 F_weight = c2d(F_weight, Ts, 'foh');
 W1inv = 1 - F_weight;
 % W1inv = makeweight(0.01, 5, 1.4, Ts);
-figure
-bode(W1inv, S_des);
+% figure
+% bode(W1inv, S_des);
 W1 = 1/W1inv;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
 % Weight on the control sensitivity
-% W2 = makeweight(0, [0 1], 0, Ts);
-W2inv = tf(500);
-W2 = 1/W2inv;
+W2 = makeweight(0, [10 1], 100, Ts);
+% W2inv = tf(500);
+% W2 = 1/W2inv;
 W2 = tf(0);
 W2.u = {'delta_lat'};
 W2.y = {'z_2'};
@@ -109,7 +109,7 @@ W3.y = {'z_3'};
 Sum = sumblk('e_phi = phi_0 - phi');
 % P = connect(Sum, G_nom, W1, {'phi_0', 'delta_lat'}, {'z_1', 'phi', 'p', 'e_phi'});
 % P = augw(G_nom, W1);
-P = connect(Rp, W1, W2, W3, Sum, Rphi, G_nom, {'phi_0'}, {'z_1', 'z_2', 'z_3'});
+P = connect(Rp, W1, W2, W3, Sum, Rphi, G_nom, {'phi_0'}, {'phi', 'p', 'z_1', 'z_2', 'z_3'});
 % P = connect(Rp, W1, Sum, Rphi, G_nom, {'phi_0'}, {'z_1'});
 
 % K0 = connect(Rphi, Rp, {'e_phi'; 'p'},  {'delta_lat'});
