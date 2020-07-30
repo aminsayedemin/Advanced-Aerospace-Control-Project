@@ -79,13 +79,13 @@ F2 = c2d(F2, Ts, 'foh');
 S_des = 1 - F2;
 
 % Weight on the sensitivity function
-csi = 0.92;
-om = 15;
+csi = 0.9;
+om = 30;
 
 F_weight = tf([om^2], [1, 2*csi*om, om^2]);
 F_weight = c2d(F_weight, Ts, 'foh');
 W1inv = 1 - F_weight;
-% W1inv = makeweight(0.01, 5, 1.4, Ts);
+W1inv = makeweight(0.01, 8, 1.4, Ts);
 figure
 bode(W1inv, S_des);
 W1 = 1/W1inv;
