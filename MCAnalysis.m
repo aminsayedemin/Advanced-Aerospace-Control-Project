@@ -203,7 +203,7 @@ end
 N = size(delta, 1);
 omega = logspace(-3, 2, 500);
 
-BLK = [1 0];
+BLK = [1 0]; % delta is real and diagonal
 Mu = W * F;
 bounds = mussv(frd(tf(Mu), omega), BLK, 'a');
 
