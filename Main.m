@@ -72,23 +72,29 @@ Rphi.y = {'p_0'};
 
 %% Weights for "hinfstruct"
 % % Weight on the sensitivity function
-% csi = 0.35;
-% om = 6;
-% Fw = tf([om^2], [1, 2*csi*om, om^2]);
-% Fw = c2d(Fw, Ts, 'foh');
-% W1inv = 1 - Fw;
-% % W1inv = makeweight(0, 50, 1.5, Ts);
+csi = 0.5;
+om = 5;
+Fw = tf([om^2], [1, 2*csi*om, om^2]);
+Fw = c2d(Fw, Ts, 'foh');
+W1inv = 1 - Fw;
+W1 = 1/W1inv;
+
+% M = ?; % Peak of sensitivity function
+% omb = ?; % Lower bound on crossover frequency of S
+% A = ? e-3; % Max value of S at steady state
+% W1inv = (s+A*omb)/(s/M+omb);
 % W1 = 1/W1inv;
-% W1.u = {'e_phi'};
-% W1.y = {'z_1'};
-% 
-% % Weight on the control sensitivity
-% W2inv = tf(1);
-% W2 = 1/W2inv;
-% W2.u = {'delta_lat'};
-% W2.y = {'z_2'};
-% 
-% % Weight on the complementary sensitivity
+
+W1.u = {'e_phi'};
+W1.y = {'z_1'};
+
+% Weight on the control sensitivity
+W2inv = tf(1);
+W2 = 1/W2inv;
+W2.u = {'delta_lat'};
+W2.y = {'z_2'};
+
+% Weight on the complementary sensitivity
 % W3 = tf(0);
 % W3.u = {'phi'};
 % W3.y = {'z_3'};
@@ -96,8 +102,9 @@ Rphi.y = {'p_0'};
 %% Assembly
 Sum = sumblk('e_phi = phi_0 - phi');
 
-% P = connect(Rp, W1, W2, W3, Sum, Rphi, G_nom, {'phi_0'}, {'z_1', 'z_2', 'z_3', 'p', 'phi'});
-P = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'}, {'delta_lat'});
+P_h = connect(Rp, W1, W2, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2', 'phi', 'p'}, {'delta_lat'});
+% P = connect(Rp, W1, W2, W3, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2', 'z_3', 'phi', 'p'});
+P_s = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'}, {'delta_lat'});
 
 %% Tuning
 % Desired dynamics
@@ -112,17 +119,26 @@ S0 = 1 - F0;
 soft = TuningGoal.Transient('phi_0', 'phi', F0, 'step');
 hard = TuningGoal.Gain('phi_0', 'delta_lat', 1);
 
-options = systuneOptions;
-options.RandomStart = 20;
-[K, GSOFT, GHARD, INFO] = systune(P, soft, hard, options); % Soft: Objective, Hard: Constraint
-GSOFT, GHARD
+starts = 1;
 
-% opt = hinfstructOptions('Display', 'final', 'RandomStart', 20);
-% [K, gamma, info] = hinfstruct(P, opt);
+options = systuneOptions;
+options.RandomStart = starts;
+[K_s, GSOFT, GHARD, INFO] = systune(P_s, soft, hard, options); % Soft: Objective, Hard: Constraint
+% GSOFT, GHARD
+
+opt = hinfstructOptions('Display', 'final', 'RandomStart', starts);
+[K_h, gamma, info] = hinfstruct(P_h, opt);
 % gamma
 
 % [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
 %     K.Blocks.d1.Value; K.Blocks.d2.Value; K.Blocks.d3.Value]
+
+for i = 1:2 % Needed for the first plot
+    if i == 1
+        K = K_h;
+    elseif i == 2
+        K = K_s;
+    end
 
 %% Tuned system redefinition
 % Controller: R_p
@@ -157,12 +173,36 @@ Rphi.y = {'p_0'};
 % Assembly
 Loop = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
 F = Loop(2); % Complementary Sensitivity
+
+if i == 1
+F_old = F; % F_old is the one obtained with hinfstruct
+S_old = 1 - F_old;
+end
+
 S = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}); % Sensitivity
 Q = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'delta_lat'});% Control sensitivity
+end
 
 %% Plots
-inutili = 1; % Show(1)/Hide(0) some graphs
+inutili = 1; % Show (1) or hide (0) some graphs
 Tf = 3; % Final time of the step plots
+
+% Check the requirement
+figure;
+hold on
+[y_s, t_Ls] = step(F, Tf); % Step of the system, with output phi
+[y_h, t_Lh] = step(F_old, Tf); % Step of the system, with output phi
+[z_s, t_F] = step(F0, Tf); % Step response of the desired dynamics
+
+h1 = plot(t_Ls, squeeze(y_s), 'LineWidth', 2);
+h2 = plot(t_Lh, squeeze(y_h), 'LineWidth', 2);
+h3 = plot(t_F, squeeze(z_s), '--', 'LineWidth', 2);
+
+legend([h3(1), h1(1), h2(1)], 'Desired response', '\textit{systune}', '\textit{hinfstruct}', 'Location', 'southeast', 'Interpreter', 'Latex');
+xlabel('Time [s]', 'Interpreter', 'Latex');
+ylabel ('Amplitude', 'Interpreter', 'Latex');
+axis ([0 Tf -0.2 1.2]);
+grid on
 
 % Step response wrt phi and p
 figure;
@@ -183,20 +223,6 @@ ylabel ('Amplitude', 'Interpreter', 'Latex');
 title('Output: phi', 'Interpreter', 'Latex');
 axis ([0 Tf -0.2 1.2]);
 grid on
-
-% Check of the requirement
-figure;
-hold on
-[y, t_L] = step(F, Tf); % Step of the system, with output phi
-[z, t_F] = step(F0, Tf); % Step response of the desired dynamics
-h1 = plot(t_L, squeeze(y), 'LineWidth', 2);
-h2 = plot(t_F, squeeze(z), '--', 'LineWidth', 2);
-legend([h1(1), h2(1)], 'Actual response', 'Desired response', 'Location', 'southeast', 'Interpreter', 'Latex');
-xlabel('Time [s]', 'Interpreter', 'Latex');
-ylabel ('Amplitude', 'Interpreter', 'Latex');
-axis ([0 Tf -0.2 1.2]);
-grid on
-
 if inutili == 1
     
 % Sensitivity
@@ -218,7 +244,6 @@ title ('Complementary sensitivity Function', 'Interpreter', 'Latex');
 
 subplot(2,1,2), margin(F);
 grid on;
-
 end
 
 % Control Sensitivity
@@ -238,23 +263,24 @@ grid on;
 title ('Control sensitivity Function', 'Interpreter', 'Latex');
 
 %% Plots for "hinfstruct"
-% % Sensitivity
-% figure;
-% bode(S, W1inv, S0);
-% legend('S', '1/W1', 'Desired S')
-% grid on;
-% 
+% Sensitivity
+figure;
+bode(S_old, W1inv, S0);
+legend('S', '1/W1', 'Desired S', 'Interpreter', 'Latex');
+title('hinfstruct');
+grid on
+
 % % Complementary Sensitivity
 % figure
 % bode(F, W3inv, F0);
 % legend('Loop', '1/W3', 'Desired F');
 % grid on;
-% 
+
 % figure;
 % bode(Loop(2) * W3)
 % title('Multiplication between F and W3');
 % grid on;
-% 
+
 % % Control Sensitivity
 % figure;
 % bode(Q, W2inv);
