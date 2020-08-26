@@ -183,11 +183,12 @@ S = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}); % Sensitivity
 Q = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'delta_lat'});% Control sensitivity
 end
 
-%% Plots
+%% Plots for "systune"
 inutili = 1; % Show (1) or hide (0) some graphs
 Tf = 3; % Final time of the step plots
 
 % Check the requirement
+% (here both hinfstruct and systune)
 figure;
 hold on
 [y_s, t_Ls] = step(F, Tf); % Step of the system, with output phi
