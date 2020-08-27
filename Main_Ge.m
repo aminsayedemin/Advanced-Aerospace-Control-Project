@@ -97,7 +97,7 @@ Rphi.y = {'p_0'};
 %% Weights for "hinfstruct"
 
 % Weight on the sensitivity function
-om_w1 = 5; %crossover frequency
+om_w1 = 3; %crossover frequency
 A_w1 = 1e-5; %steady-state error
 M_w1 = 1.5;
 s = zpk('s');
@@ -117,7 +117,7 @@ W1.y = {'z_1'};
 
 
 % % Weight on the control sensitivity
-W2inv = tf([0.55],[1/50 1]);
+W2inv = tf([1],[1/50 1]);
 W2inv = c2d(W2inv, Ts, 'foh');
 
 % figure
@@ -207,7 +207,7 @@ Rphi.y = {'p_0'};
 
 % Assembly
 Loop = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
-F = Loop(2); % Complementary Sensitivity
+F = tf(Loop(2))% Complementary Sensitivity
 S = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}); % Sensitivity
 Q = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'delta_lat'});% Control sensitivity
 
