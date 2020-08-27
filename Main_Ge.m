@@ -97,12 +97,12 @@ Rphi.y = {'p_0'};
 %% Weights for "hinfstruct"
 
 % Weight on the sensitivity function
-om_w1 = 3; %crossover frequency
-A_w1 = 1e-5; %steady-state error
-M_w1 = 1.5;
+om_w1 = 13; %crossover frequency
+A_w1 = 1e-4; %steady-state error
+M_w1 = 1.2;
 s = zpk('s');
-W1inv = s/om_w1 * 1/(s/M_w1/om_w1 + 1);
-% W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
+% W1inv = s/om_w1 * 1/(s/M_w1/om_w1 + 1);
+W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
 W1inv = c2d(W1inv, Ts, 'foh');
 % W1inv = makeweight(0, 50, 1.5, Ts);
 
@@ -115,9 +115,8 @@ W1 = 1/W1inv;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
-
 % % Weight on the control sensitivity
-W2inv = tf([1],[1/50 1]);
+W2inv = tf([0.8],[1]);
 W2inv = c2d(W2inv, Ts, 'foh');
 
 % figure
@@ -169,7 +168,7 @@ S0 = 1 - F0;
 % [K, GSOFT, GHARD, INFO] = systune(P, soft, hard, options); % Soft: Objective, Hard: Constraint
 % GSOFT, GHARD
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 70);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 30);
 [K, gamma, info] = hinfstruct(P, opt);
 
 [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
@@ -207,13 +206,13 @@ Rphi.y = {'p_0'};
 
 % Assembly
 Loop = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
-F = tf(Loop(2))% Complementary Sensitivity
+F = tf(Loop(2));% Complementary Sensitivity
 S = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}); % Sensitivity
 Q = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'delta_lat'});% Control sensitivity
 
 %% Plots
 % inutili = 0; % Show(1)/Hide(0) some graphs
-Tf = 5; % Final time of the step plots
+Tf = 3; % Final time of the step plots
 
 % Step response wrt phi and p
 figure
