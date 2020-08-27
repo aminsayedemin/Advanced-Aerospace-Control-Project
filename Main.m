@@ -71,9 +71,9 @@ Rphi.u = {'e_phi'};
 Rphi.y = {'p_0'};
 
 %% Weights for "hinfstruct"
-% % Weight on the sensitivity function
-csi = 0.5;
-om = 5;
+% Weight on the sensitivity function
+csi = 0.9;
+om = 12;
 Fw = tf([om^2], [1, 2*csi*om, om^2]);
 Fw = c2d(Fw, Ts, 'foh');
 W1inv = 1 - Fw;
@@ -102,7 +102,7 @@ W2.y = {'z_2'};
 %% Assembly
 Sum = sumblk('e_phi = phi_0 - phi');
 
-P_h = connect(Rp, W1, W2, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2', 'phi', 'p'}, {'delta_lat'});
+P_h = connect(Rp, W1, W2, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2', 'p', 'phi'}, {'delta_lat'});
 % P = connect(Rp, W1, W2, W3, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2', 'z_3', 'phi', 'p'});
 P_s = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'}, {'delta_lat'});
 
@@ -119,7 +119,7 @@ S0 = 1 - F0;
 soft = TuningGoal.Transient('phi_0', 'phi', F0, 'step');
 hard = TuningGoal.Gain('phi_0', 'delta_lat', 1);
 
-starts = 1;
+starts = 10;
 
 options = systuneOptions;
 options.RandomStart = starts;
@@ -258,8 +258,9 @@ grid on;
 legend('Output: $\delta_{lat}$', 'Interpreter', 'Latex');
 title('Step of amplitude 10 response', 'Interpreter', 'Latex');
 
+% Control sensitivity function
 figure;
-bode(F, F0);
+bode(Q);
 grid on;
 title ('Control sensitivity Function', 'Interpreter', 'Latex');
 
