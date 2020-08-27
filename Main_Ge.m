@@ -97,11 +97,12 @@ Rphi.y = {'p_0'};
 %% Weights for "hinfstruct"
 
 % Weight on the sensitivity function
-om_w1 = 15; %crossover frequency
-A_w1 = 1e-2;
-M_w1 = 60;
+om_w1 = 5; %crossover frequency
+A_w1 = 1e-5; %steady-state error
+M_w1 = 1.5;
 s = zpk('s');
 W1inv = s/om_w1 * 1/(s/M_w1/om_w1 + 1);
+% W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
 W1inv = c2d(W1inv, Ts, 'foh');
 % W1inv = makeweight(0, 50, 1.5, Ts);
 
@@ -114,13 +115,20 @@ W1 = 1/W1inv;
 W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
-% 
+
 % % Weight on the control sensitivity
-% W2inv = tf(1);
-% W2 = 1/W2inv;
-% W2.u = {'delta_lat'};
-% W2.y = {'z_2'};
-% 
+W2inv = tf([0.55],[1/50 1]);
+W2inv = c2d(W2inv, Ts, 'foh');
+
+% figure
+% bode(W2inv)
+% title ('1/W2')
+% grid on
+
+W2 = 1/W2inv;
+W2.u = {'delta_lat'};
+W2.y = {'z_2'};
+
 % % Weight on the complementary sensitivity
 % W3 = tf(0);
 % W3.u = {'phi'};
@@ -129,7 +137,7 @@ W1.y = {'z_1'};
 %% Assembly
 Sum = sumblk('e_phi = phi_0 - phi');
 
-P = connect(Rp, W1, Sum, Rphi, G, {'phi_0'}, {'z_1', 'p', 'phi'});
+P = connect(Rp, W1, W2, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2', 'phi', 'p'});
 % P = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'}, {'delta_lat'});
 
 %% Tuning
@@ -147,10 +155,10 @@ F0 = c2d(F0, Ts, 'foh');
 
 S0 = 1 - F0;
 
-figure
-bode(S0)
-title ('Desired S')
-grid on
+% figure
+% bode(S0)
+% title ('Desired S')
+% grid on
 
 % 
 % soft = TuningGoal.Transient('phi_0', 'phi', F0, 'step');
@@ -205,14 +213,19 @@ Q = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'delta_lat'});% Control sensitivity
 
 %% Plots
 % inutili = 0; % Show(1)/Hide(0) some graphs
-Tf = 3; % Final time of the step plots
+Tf = 5; % Final time of the step plots
 
 % Step response wrt phi and p
-figure;
+figure
+% hold on
+step(Loop(1), Tf)
+
+figure
+step(Loop(2), Tf)
 hold on
-[s_L1, t_L1] = step(Loop(1), Tf);
-[s_L2, t_L2] = step(Loop(2), Tf);
-% 
+step(F0, Tf)
+legend ('Phi', 'Desired Phi')
+
 % subplot(2,1,1), plot(t_L1, squeeze(s_L1), 'LineWidth',2);
 % xlabel('Time [s]', 'Interpreter', 'Latex');
 % ylabel ('Amplitude', 'Interpreter', 'Latex');
@@ -265,15 +278,15 @@ hold on
 % end
 % 
 % % Control Sensitivity
-% figure;
-% opt = stepDataOptions('StepAmplitude', 10);
-% [s_Q, t_Q] = step(Q, 50, opt);
-% plot(t_Q, squeeze(s_Q), 'LineWidth',2)
-% xlabel('Time', 'Interpreter', 'Latex');
-% ylabel ('Amplitude', 'Interpreter', 'Latex');
-% grid on;
-% legend('Output: $\delta_{lat}$', 'Interpreter', 'Latex');
-% title('Step of amplitude 10 response', 'Interpreter', 'Latex');
+figure;
+opt = stepDataOptions('StepAmplitude', 10);
+[s_Q, t_Q] = step(Q, 50, opt);
+plot(t_Q, squeeze(s_Q), 'LineWidth',2)
+xlabel('Time', 'Interpreter', 'Latex');
+ylabel ('Amplitude', 'Interpreter', 'Latex');
+grid on;
+legend('Output: $\delta_{lat}$', 'Interpreter', 'Latex');
+title('Step of amplitude 10 response', 'Interpreter', 'Latex');
 % 
 % figure;
 % bode(F, F0);
@@ -301,8 +314,8 @@ grid on
 % 
 % % Control Sensitivity
 figure;
-bode(Q);
-legend('Q');
+bode(Q, W2inv);
+legend('Q', '1/W2');
 grid on;
 
 %% END OF CODE
