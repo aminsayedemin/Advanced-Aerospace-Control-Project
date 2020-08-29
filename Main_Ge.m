@@ -97,14 +97,17 @@ Rphi.y = {'p_0'};
 %% Weights for "hinfstruct"
 
 % Weight on the sensitivity function
-om_w1 = 13; %crossover frequency
+csi_w1 = 0.9
+om_w1 = 10; %crossover frequency
 A_w1 = 1e-4; %steady-state error
-M_w1 = 1.2;
+M_w1 = 1.5;
 s = zpk('s');
+F_w1 = om_w1^2/(s^2 + 2*csi_w1*om_w1*s + om_w1^2);
+W1inv = 1 - F_w1;
 % W1inv = s/om_w1 * 1/(s/M_w1/om_w1 + 1);
-W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
+% W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
 W1inv = c2d(W1inv, Ts, 'foh');
-% W1inv = makeweight(0, 50, 1.5, Ts);
+% % W1inv = makeweight(0, 50, 1.5, Ts);
 
 % figure
 % bode(W1inv)
@@ -116,7 +119,7 @@ W1.u = {'e_phi'};
 W1.y = {'z_1'};
 
 % % Weight on the control sensitivity
-W2inv = tf([0.8],[1]);
+W2inv = tf([1],[1/30 1]);
 W2inv = c2d(W2inv, Ts, 'foh');
 
 % figure
@@ -136,7 +139,7 @@ W2.y = {'z_2'};
 %% Assembly
 Sum = sumblk('e_phi = phi_0 - phi');
 
-P = connect(Rp, W1, W2, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2', 'phi', 'p'});
+P = connect(Rp, W1, Sum, Rphi, G, {'phi_0'}, {'z_1'});
 % P = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'}, {'delta_lat'});
 
 %% Tuning
@@ -206,7 +209,7 @@ Rphi.y = {'p_0'};
 
 % Assembly
 Loop = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
-F = tf(Loop(2));% Complementary Sensitivity
+F = tf(Loop(2))% Complementary Sensitivity
 S = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}); % Sensitivity
 Q = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'delta_lat'});% Control sensitivity
 
@@ -278,7 +281,7 @@ legend ('Phi', 'Desired Phi')
 % 
 % % Control Sensitivity
 figure;
-opt = stepDataOptions('StepAmplitude', 10);
+opt = stepDataOptions('StepAmplitude', 10*pi/180);
 [s_Q, t_Q] = step(Q, 50, opt);
 plot(t_Q, squeeze(s_Q), 'LineWidth',2)
 xlabel('Time', 'Interpreter', 'Latex');
