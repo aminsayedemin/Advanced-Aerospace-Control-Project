@@ -122,7 +122,7 @@ S0 = 1 - F0;
 % grid on
 
 % Weight on the sensitivity function
-csi_w1 = 0.92;
+csi_w1 = 0.91;
 om_w1 = 12; %crossover frequency
 A_w1 = 1e-4; %steady-state error
 M_w1 = 1.3; %high frequency gain
@@ -134,10 +134,10 @@ W1inv = 1 - F_w1;
 W1inv = c2d(W1inv, Ts, 'foh');
 % W1inv = makeweight(A_w1, 5, 1.5, Ts, 1);
 
-% figure
-% bode(S0, W1inv, {1e-30, 1e-1})
-% legend ('S0', '1/W1')
-% grid on
+figure
+bode(S0, W1inv, {1e-30, 1e-1})
+legend ('S0', '1/W1')
+grid on
 
 W1 = 1/W1inv;
 W1.u = {'e_phi'};
@@ -161,10 +161,10 @@ W2.y = {'z_2'};
 W3 = INFO.W1;
 W3inv = 1/W3;
 
-figure
-bode((G_un(2,1,:,1) - G_nom(2))/G_nom(2), W3)
-legend ('Relative error', 'W3')
-grid on
+% figure
+% bode((G_un(2,1,:,1) - G_nom(2))/G_nom(2), W3)
+% legend ('Relative error', 'W3')
+% grid on
 
 % W3 = tf(0);
 % W3.u = {'phi'};
@@ -184,7 +184,7 @@ P = connect(Rp, W1, W2, Sum, Rphi, G_nom, {'phi_0'}, {'z_1', 'z_2'});
 % [K, GSOFT, GHARD, INFO] = systune(P, soft, hard, options); % Soft: Objective, Hard: Constraint
 % GSOFT, GHARD
 
-opt = hinfstructOptions('Display', 'final', 'RandomStart', 60);
+opt = hinfstructOptions('Display', 'final', 'RandomStart', 30);
 [K, gamma, info] = hinfstruct(P, opt);
 
 [K.Blocks.b.Value; K.Blocks.c1.Value; K.Blocks.c2.Value;
@@ -222,22 +222,23 @@ Rphi.y = {'p_0'};
 
 % Assembly
 Loop = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'});
-
 F = tf(Loop(2));% Complementary Sensitivity
 
 figure
-bode(F, W3inv)
-legend('F', '1/W3')
+bode(F, W3inv, F0)
+legend('F', '1/W3', 'Desired F')
 grid on
 
 S = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'e_phi'}); % Sensitivity
+S = tf(S);
 
 figure
-bode(S, W1inv, S0)
+bode(S, W1inv, S0, {1e-20, 1e3})
 legend('S', '1/W1', 'Desired S')
 grid on
 
 Q = connect(G_nom, Rp, Rphi, Sum, {'phi_0'}, {'delta_lat'});% Control sensitivity
+Q = tf(Q);
 
 figure;
 bode(Q, W2inv);
@@ -250,9 +251,25 @@ RP2 = W3 * F;
 RP = RP1 + RP2;
 
 figure
-bode(RP1, RP2, RP, {1e-5,1e+3})
+bode(RP1, RP2, RP, {1e-20, 1e+3})
+% % bode(RP1, RP2, {1e-25,1e+3})
+% [mag1,phase1] = bode(RP1);
+% % semilogx(wout,20*log10(squeeze(mag)));
+% % mag_1 = squeeze(mag);
+% 
+% [mag2,phase2] = bode(RP2);
+% % semilogx(wout,20*log10(squeeze(mag)));
+% % mag_2 = squeeze(mag);
+% 
+% RP_mag = mag1 + mag2;
+% for i = 1:length(RP_mag)
+%     if RP_mag > 1
+%         fprintf('%f', RP_mag)
+%     end
+% end
+
 grid on
-legend('WS', 'WF', 'Robust Performance Function')
+legend('WS', 'WF', 'RP')
 
 %% MonteCarlo Analysis
 Tf = 5;
@@ -310,8 +327,8 @@ hist(Pm, bars), grid, title('Phase margin')
 % Gain margin
 figure
 % Note: Gm is in "mag", is it better in dB?
-hist(Gm, bars), grid, title('Gain margin')
-% histogram(mag2db(Gm), bars), grid, title('Gain margin')
+% hist(Gm, bars), grid, title('Gain margin')
+hist(mag2db(Gm), bars), grid, title('Gain margin')
 
 % Settling time
 figure
@@ -324,20 +341,20 @@ hist(Over, bars), grid, title('Overshoot')
 %%II part
 %% Function W
 % err1 = (G_un(1,1,:,1) - G_nom(1,1,:,1)) / G_nom(1,1,:,1);
-err2 = (G_un(2,1,:,1) - G_nom(2,1,:,1)) / G_nom(2,1,:,1);
+% err2 = (G_un(2,1,:,1) - G_nom(2,1,:,1)) / G_nom(2,1,:,1);
 
-[W0, INFO] = ucover(G_un(2,1,:,1), G_nom(2,1,:,1), 1);
-W = INFO.W1;
+% [W0, INFO] = ucover(G_un(2,1,:,1), G_nom(2,1,:,1), 1);
+% W = INFO.W1;
 
 % Plot
-figure;
-hold on
-p_e = bodeplot(err2);
-p_W = bodeplot(INFO.W1);
-legend('Uncertain plant', 'Function W', 'Interpreter', 'Latex');%% M - Delta decomposition
-[M, delta] = lftdata(ld_un);
-maxnorm = wcnorm(delta); % Max: 1.0016 (OK)
-Delta = usample(delta, smpls);
+% figure;
+% hold on
+% p_e = bodeplot(err2);
+% p_W = bodeplot(INFO.W1);
+% legend('Uncertain plant', 'Function W', 'Interpreter', 'Latex');%% M - Delta decomposition
+% [M, delta] = lftdata(ld_un);
+% maxnorm = wcnorm(delta); % Max: 1.0016 (OK)
+% Delta = usample(delta, smpls);
 
 % figure;
 % sigma(M), grid on
@@ -348,34 +365,34 @@ Delta = usample(delta, smpls);
 % % [U, S, V] = svd(G0);
 % % sv = diag(S);
 
-maxi = 0;
-for i = 1:smpls
-    sv = svd(Delta(:,:,i));
-   
-    if sv > max(maxi)
-        maxi = sv;
-        
-        if max(maxi) >= 1
-            disp('You"re fucked bro');
-        end
-    end
-end
-
-%% SSV (mu-Delta Analysis)
-% There are no sigmas > 1, so now Goal: verify that mu<1 at all omega
-
-N = size(delta, 1);
-omega = logspace(-3, 2, 500);
-
-BLK = [1 0]; % delta is real and diagonal
-Mu = W * F;
-bounds = mussv(frd(tf(Mu), omega), BLK, 'a');
-
-% Plot
-figure;
-sigma(bounds), grid on
-title('S.S.V.: $\mu$', 'Interpreter', 'Latex');
-% Satisfied!
+% maxi = 0;
+% for i = 1:smpls
+%     sv = svd(Delta(:,:,i));
+%    
+%     if sv > max(maxi)
+%         maxi = sv;
+%         
+%         if max(maxi) >= 1
+%             disp('You"re fucked bro');
+%         end
+%     end
+% end
+% 
+% %% SSV (mu-Delta Analysis)
+% % There are no sigmas > 1, so now Goal: verify that mu<1 at all omega
+% 
+% N = size(delta, 1);
+% omega = logspace(-3, 2, 500);
+% 
+% BLK = [1 0]; % delta is real and diagonal
+% Mu = W * F;
+% bounds = mussv(frd(tf(Mu), omega), BLK, 'a');
+% 
+% % Plot
+% figure;
+% sigma(bounds), grid on
+% title('S.S.V.: $\mu$', 'Interpreter', 'Latex');
+% % Satisfied!
 
 %% Plots
 % inutili = 0; % Show(1)/Hide(0) some graphs
@@ -465,10 +482,10 @@ title('Step of amplitude 10 response', 'Interpreter', 'Latex');
 
 % 
 % % Complementary Sensitivity
-figure
-bode(F, W3inv, F0);
-legend('Loop', '1/W3', 'Desired F');
-grid on;
+% figure
+% bode(F, W3inv, F0);
+% legend('Loop', '1/W3', 'Desired F');
+% grid on;
 % 
 % figure;
 % bode(Loop(2) * W3)
