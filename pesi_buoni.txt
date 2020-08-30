@@ -1,0 +1,78 @@
+% Weight on the sensitivity function
+csi_w1 = 0.9
+om_w1 = 10; %crossover frequency
+A_w1 = 1e-4; %steady-state error
+M_w1 = 1.5; %high frequency gain
+s = zpk('s');
+F_w1 = om_w1^2/(s^2 + 2*csi_w1*om_w1*s + om_w1^2);
+W1inv = 1 - F_w1;
+% W1inv = s/om_w1 * 1/(s/M_w1/om_w1 + 1);
+% W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
+W1inv = c2d(W1inv, Ts, 'foh');
+% W1inv = makeweight(A_w1, 5, 1.5, Ts, 1);
+
+% figure
+% bode(W1inv)
+% title ('1/W1')
+% grid on
+
+W1 = 1/W1inv;
+W1.u = {'e_phi'};
+W1.y = {'z_1'};
+
+% Weight on the control sensitivity
+W2inv = tf([2],[1/33 1]);
+W2inv = c2d(W2inv, Ts, 'foh');
+
+% Weight on the sensitivity function
+csi_w1 = 0.9;
+om_w1 = 5; %crossover frequency
+A_w1 = 1e-4; %steady-state error
+M_w1 = 1.3; %high frequency gain
+s = zpk('s');
+% F_w1 = om_w1^2/(s^2 + 2*csi_w1*om_w1*s + om_w1^2);
+% W1inv = 1 - F_w1;
+W1inv = s/om_w1 * 1/(s/M_w1/om_w1 + 1);
+% W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
+W1inv = c2d(W1inv, Ts, 'foh');
+% W1inv = makeweight(A_w1, 5, 1.5, Ts, 1);
+
+% figure
+% bode(W1inv, {1e-16, 1e-1})
+% title ('1/W1')
+% grid on
+
+W1 = 1/W1inv;
+W1.u = {'e_phi'};
+W1.y = {'z_1'};
+
+% % Weight on the control sensitivity
+W2inv = tf([2],[1/33 1]);
+W2inv = c2d(W2inv, Ts, 'foh');
+
+
+% Weight on the sensitivity function
+csi_w1 = 0.92;
+om_w1 = 11; %crossover frequency
+A_w1 = 1e-4; %steady-state error
+M_w1 = 1.3; %high frequency gain
+s = zpk('s');
+F_w1 = om_w1^2/(s^2 + 2*csi_w1*om_w1*s + om_w1^2);
+W1inv = 1 - F_w1;
+% W1inv = s/om_w1 * 1/(s/M_w1/om_w1 + 1);
+% W1inv = (s + om_w1 * A_w1)/(s/M_w1 + om_w1);
+W1inv = c2d(W1inv, Ts, 'foh');
+% W1inv = makeweight(A_w1, 5, 1.5, Ts, 1);
+
+% figure
+% bode(S0, W1inv, {1e-30, 1e-1})
+% legend ('S0', '1/W1')
+% grid on
+
+W1 = 1/W1inv;
+W1.u = {'e_phi'};
+W1.y = {'z_1'};
+
+% % Weight on the control sensitivity
+W2inv = tf([2],[1/33 1]);
+W2inv = c2d(W2inv, Ts, 'foh');
