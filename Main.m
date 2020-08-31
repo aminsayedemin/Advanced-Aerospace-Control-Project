@@ -203,10 +203,11 @@ h2 = plot(t_Lsys, squeeze(y_sys), 'LineWidth', 2);
 h3 = plot(t_F, squeeze(z_s), '--', 'LineWidth', 2);
 
 % legend([h3(1), h1(1), h2(1)], 'Desired response', '\textit{hinfstruct}', '\textit{systune}', 'Location', 'southeast', 'Interpreter', 'Latex');
-% xlabel('Time [s]', 'Interpreter', 'Latex');
-% ylabel ('Amplitude', 'Interpreter', 'Latex');
-% axis ([0 Tf -0.2 1.2]);
-% grid on
+legend([h3(1), h1(1)], 'Desired response', '\textit{hinfstruct}', 'Location', 'southeast', 'Interpreter', 'Latex');
+xlabel('Time [s]', 'Interpreter', 'Latex');
+ylabel ('Amplitude', 'Interpreter', 'Latex');
+axis ([0 Tf -0.2 1.2]);
+grid on
 
 %% Plots
 % Sensitivity
@@ -237,7 +238,7 @@ title ('Robust Performance', 'Interpreter', 'Latex');
 % Control sensitivity
 figure;
 bode(Q, W2inv);
-legend('Q', '1/W2');
+legend('Q', '1/W2', 'Interpreter', 'Latex');
 grid on;
 title ('Control Sensitivity Function', 'Interpreter', 'Latex');
 
