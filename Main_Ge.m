@@ -97,7 +97,7 @@ Rphi.y = {'p_0'};
 %% Weights for "hinfstruct"
 
 % Weight on the sensitivity function
-csi_w1 = 0.9
+csi_w1 = 0.9;
 om_w1 = 10; %crossover frequency
 A_w1 = 1e-4; %steady-state error
 M_w1 = 1.5;
@@ -140,6 +140,7 @@ W2.y = {'z_2'};
 Sum = sumblk('e_phi = phi_0 - phi');
 
 P = connect(Rp, W1, Sum, Rphi, G, {'phi_0'}, {'z_1'});
+% P = connect(Rp, W1, W2, Sum, Rphi, G, {'phi_0'}, {'z_1', 'z_2'}); %, 'p', 'phi'
 % P = connect(G, Rp, Rphi, Sum, {'phi_0'}, {'p', 'phi'}, {'delta_lat'});
 
 %% Tuning
